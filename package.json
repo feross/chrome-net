@@ -1,0 +1,49 @@
+{
+  "name": "chrome-net",
+  "version": "1.0.0",
+  "description": "Use the Node `net` API in Chrome Apps",
+  "main": "index.js",
+  "dependencies": {
+    "bops": "0.x",
+    "core-util-is": "1.x"
+  },
+  "devDependencies": {
+    "async": "0.x",
+    "browserify": "2.x",
+    "chrome-dgram": "*",
+    "envify": "0.x",
+    "once": "1.x",
+    "portfinder": "0.x",
+    "tape": "2.x",
+    "through": "2.x"
+  },
+  "browser": {
+    "buffer": false
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/feross/chrome-net.git"
+  },
+  "keywords": [
+    "chrome app",
+    "chrome.socket",
+    "socket api",
+    "net",
+    "tcp",
+    "wrapper",
+    "client",
+    "server"
+  ],
+  "author": "Feross Aboukhadijeh <feross@feross.org> (http://feross.org/)",
+  "contributors": [
+    "John Hiesey <john@hiesey.com>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/feross/chrome-net/issues"
+  },
+  "homepage": "https://github.com/feross/chrome-net"
+}
