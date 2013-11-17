@@ -417,22 +417,6 @@ function Socket (options) {
 
   // Since buffer-browserify's Buffer implementation is slow and non-native,
   // let's make this a stream of Uint8Array objects.
-  //
-  // TODO: Consider defunctzombie's approach:
-  //
-  // defunctzombie: https://github.com/alexgorbatchev/node-browser-builtins/tree/master/builtin
-  // defunctzombie: take the stream files
-  // defunctzombie: stream.js
-  // defunctzombie: and the __stream shit
-  // defunctzombie: put them all into a repo
-  // defunctzombie: maybe called bops-stream I dunno
-  // defunctzombie: and update the uses of Buffer('foobar') or whatever to use bops
-  // defunctzombie: if the bops was API compatible you could just change require('buffer') to require('bops');
-  // feross: right
-  // defunctzombie: then in your module just require('bops-stream'); and you will be set
-  // feross: and use it in place of require('stream')?
-  // defunctzombie: this will be nice since others will be able to use your module too
-  // defunctzombie: yep
   options.objectMode = true
 
   stream.Duplex.call(self, options)
