@@ -475,6 +475,10 @@ Socket.prototype.connect = function (options, cb) {
 
   self._connecting = true
 
+  if (is.isFunction(cb)) {
+    self.once('connect', cb)
+  }
+
   chrome.socket.create('tcp', {}, function (createInfo) {
     self.id = createInfo.socketId
 
