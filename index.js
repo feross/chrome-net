@@ -484,7 +484,7 @@ Socket.prototype.connect = function (options, cb) {
 
     chrome.socket.connect(self.id,
                           options.host,
-                          options.port,
+                          Number(options.port),
                           function (result) {
       if (result < 0) {
         self.destroy('error', new Error('Socket ' + self.id +
