@@ -13,6 +13,7 @@
  * net.isIP(input)
  * net.isIPv4(input)
  * net.isIPv6(input)
+ * Socket.prototype.bufferSize
  */
 
 var bops = require('bops')
@@ -50,7 +51,7 @@ function toNumber (x) { return (x = Number(x)) >= 0 ? x : false }
  * guaranteed to be the same size as the Uint8Array.
  *
  * @param  {Uint8Array|ArrayBuffer|string} data
- * @return {Uint8Array}      [description]
+ * @return {Uint8Array}
  */
 function toBuffer (data) {
   if (bops.is(data)) {
@@ -179,7 +180,7 @@ function Server (/* [options], listener */) {
  * event will be emitted. The last parameter callback will be added as an
  * listener for the 'listening' event.
  *
- * @return {[type]} [description]
+ * @return {Socket}
  */
 Server.prototype.listen = function (/* variable arguments... */) {
   var self = this
@@ -267,37 +268,6 @@ Server.prototype.close = function (callback) {
 // TODO
 Server.prototype._destroy = function (exception, cb) {
   var self = this
-
-  // function fireErrorCallbacks () {
-  //   if (cb) cb(exception)
-  //   if (exception && !self.errorEmitted) {
-  //     process.nextTick(function () {
-  //       self.emit('error', exception)
-  //     })
-  //     self.errorEmitted = true
-  //   }
-  // }
-
-  // if (self.destroyed) {
-  //   // already destroyed, fire error callbacks
-  //   fireErrorCallbacks()
-  //   return
-  // }
-
-  // self._connecting = false
-  // this.readable = this.writable = false
-
-  // chrome.socket.disconnect(self.id)
-  // chrome.socket.destroy(self.id)
-
-  // self.emit('close', !!exception)
-  // fireErrorCallbacks()
-
-  // self.destroyed = true
-
-  // if (this.server) {
-  //   this.server._connections -= 1
-  // }
 }
 
 /**
@@ -463,9 +433,8 @@ function Socket (options) {
  * 'connect' event.
  *
  * @param  {Object} options
- * @param  {function} cb
- * @param  {[type]} [connectListener] [description]
- * @return {[type]}                   [description]
+ * @param  {function} [connectListener]
+ * @return {Socket}   this socket (for chaining)
  */
 Socket.prototype.connect = function (options, cb) {
   var self = this
@@ -487,8 +456,8 @@ Socket.prototype.connect = function (options, cb) {
                           Number(options.port),
                           function (result) {
       if (result < 0) {
-        self.destroy('error', new Error('Socket ' + self.id +
-            ' connect error ' + result))
+        self.destroy(new Error('Socket ' + self.id + ' connect error ' +
+            result))
         return
       }
 
@@ -512,15 +481,12 @@ Socket.prototype._onConnect = function () {
     self.readable = self.writable = true
 
     self.emit('connect')
-
     // start the first read, or get an immediate EOF.
     // this doesn't actually consume any bytes, because len=0
     self.read(0)
   })
 
 }
-
-// Socket.prototype.bufferSize
 
 /**
  * Sends data on the socket. The second parameter specifies the encoding in
@@ -630,7 +596,12 @@ Socket.prototype.__defineGetter__('bytesWritten', function () {
   return bytes
 })
 
-Socket.prototype.destroy = function (exception, cb) {
+Socket.prototype.destroy = function (exception) {
+  var self = this
+  self._destroy(exception)
+}
+
+Socket.prototype._destroy = function (exception, cb) {
   var self = this
 
   function fireErrorCallbacks () {
