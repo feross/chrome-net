@@ -46,35 +46,6 @@ function normalizeConnectArgs (args) {
 function toNumber (x) { return (x = Number(x)) >= 0 ? x : false }
 
 /**
- * Convert given data to a Uint8Array. The underlying ArrayBuffer is
- * guaranteed to be the same size as the Uint8Array.
- *
- * @param  {Uint8Array|ArrayBuffer|string} data
- * @return {Uint8Array}
- */
-function toBuffer (data) {
-  if (Buffer.isBuffer(data)) {
-    if (data.length === data.toArrayBuffer().byteLength) {
-      return data
-    } else {
-      // If data is a Uint8Array (TypedArrayView) AND its underlying ArrayBuffer
-      // has a different size (larger) then we create a new Uint8Array and
-      // underlying ArrayBuffer that are the exact same size. This is necessary
-      // because Chrome's `sendTo` consumes the underlying ArrayBuffer.
-      var newBuf = new Buffer(data.length)
-      data.copy(newBuf, 0, 0, data.length)
-      return newBuf
-    }
-  } else if (typeof data === 'string') {
-    return new Buffer(data)
-  } else if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data)
-  } else {
-    throw new Error('Cannot convert data to ArrayBuffer type')
-  }
-}
-
-/**
  * Creates a new TCP server. The connectionListener argument is automatically
  * set as a listener for the 'connection' event.
  *
@@ -498,16 +469,17 @@ Socket.prototype._onConnect = function () {
  * The optional callback parameter will be executed when the data is finally
  * written out - this may not be immediately.
  *
- * @param  {ArrayBuffer|TypedArray|string} chunk
+ * @param  {Buffer|Arrayish|string} chunk
  * @param  {string} [encoding]
  * @param  {function} [callback]
  * @return {boolean}             flushed to kernel completely?
  */
 Socket.prototype.write = function (chunk, encoding, callback) {
-  var buffer = toBuffer(chunk)
+  if (!Buffer.isBuffer(chunk)) chunk = new Buffer(chunk)
+  chunk = chunk.toArrayBuffer()
 
   // The stream is in "object mode" so it will accept a Uint8Array object
-  return stream.Duplex.prototype.write.call(this, buffer, encoding, callback)
+  return stream.Duplex.prototype.write.call(this, chunk, encoding, callback)
 }
 
 Socket.prototype._write = function (buffer, encoding, callback) {
@@ -561,7 +533,10 @@ Socket.prototype._read = function (bufferSize) {
           readInfo.resultCode))
 
     } else {
-      var buffer = toBuffer(readInfo.data)
+      var buffer = readInfo.data
+      if (!Buffer.isBuffer(buffer)) buffer = new Buffer(buffer)
+      buffer = buffer.toArrayBuffer()
+
       self.bytesRead += buffer.length
 
       if (self.push(buffer)) // if returns true, then try to read more
