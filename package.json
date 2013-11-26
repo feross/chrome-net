@@ -4,7 +4,6 @@
   "description": "Use the Node `net` API in Chrome Apps",
   "main": "index.js",
   "dependencies": {
-    "bops": "0.x",
     "core-util-is": "1.x"
   },
   "devDependencies": {
@@ -16,9 +15,6 @@
     "portfinder": "0.x",
     "tape": "2.x",
     "through": "2.x"
-  },
-  "browser": {
-    "buffer": false
   },
   "scripts": {
     "test": "tape test/*.js"
