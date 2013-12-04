@@ -9,10 +9,6 @@
  * You can include this module with require('chrome-net')
  *
  * TODO (unimplemented):
- *
- * net.isIP(input)
- * net.isIPv4(input)
- * net.isIPv6(input)
  * Socket.prototype.bufferSize
  */
 
@@ -20,6 +16,7 @@ var EventEmitter = require('events').EventEmitter
 var is = require('core-util-is')
 var stream = require('stream')
 var util = require('util')
+var ipaddr = require('ipaddr.js')
 
 /**
  * Returns an array [options] or [options, cb]
@@ -694,4 +691,31 @@ Socket.prototype.unref = function () {
 
 Socket.prototype.ref = function () {
   // No chrome.socket equivalent
+}
+
+exports.isIP = function (input) {
+  try {
+    ipaddr.parse(input)
+  } catch (e) {
+    return false
+  }
+  return true
+}
+
+exports.isIPv4 = function (input) {
+  try {
+    var parsed = ipaddr.parse(input)
+    return (parsed.kind() === 'ipv4')
+  } catch (e) {
+    return false
+  }
+}
+
+exports.isIPv6 = function (input) {
+  try {
+    var parsed = ipaddr.parse(input)
+    return (parsed.kind() === 'ipv6')
+  } catch (e) {
+    return false
+  }
 }
