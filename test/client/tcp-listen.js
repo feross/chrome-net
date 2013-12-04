@@ -1,4 +1,3 @@
-var bops = require('bops')
 var dgram = require('chrome-dgram')
 var net = require('../../')
 
@@ -31,7 +30,9 @@ server.on('connection', function (sock) {
   })
 
   sock.on('data', function (data) {
-    if (bops.to(data) === 'beep') {
+    console.log('data')
+    console.log(data.toString())
+    if (data.toString() === 'beep') {
       sock.write('boop')
     } else {
       sock.write('fail')

@@ -1,4 +1,3 @@
-var bops = require('bops')
 var net = require('../../')
 
 var PORT = Number(process.env.PORT)
@@ -14,7 +13,7 @@ client.on('error', function (err) {
 })
 
 client.on('data', function (data) {
-  if (bops.to(data) === 'boop') {
+  if (data.toString() === 'boop') {
     client.write('pass')
   } else {
     client.write('fail')
