@@ -10,7 +10,6 @@ test('net.isIP', function (t) {
   t.ok(!chromeNet.isIP(undefined))
   t.ok(!chromeNet.isIP(null))
   t.ok(!chromeNet.isIP({}))
-  t.ok(!chromeNet.isIP())
   t.end()
 })
 
@@ -23,7 +22,6 @@ test('net.isIPv4', function (t) {
   t.ok(!chromeNet.isIPv4(undefined))
   t.ok(!chromeNet.isIPv4(null))
   t.ok(!chromeNet.isIPv4({}))
-  t.ok(!chromeNet.isIPv4())
   t.end()
 })
 
@@ -36,6 +34,5 @@ test('net.isIPv6', function (t) {
   t.ok(!chromeNet.isIPv6(undefined))
   t.ok(!chromeNet.isIPv6(null))
   t.ok(!chromeNet.isIPv6({}))
-  t.ok(!chromeNet.isIPv6())
   t.end()
 })
