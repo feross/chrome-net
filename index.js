@@ -352,10 +352,6 @@ function Socket (options) {
 
   options.decodeStrings = false // we will handle strings directly
 
-  // Since buffer-browserify's Buffer implementation is slow and non-native,
-  // let's make this a stream of Uint8Array objects.
-  options.objectMode = true
-
   stream.Duplex.call(self, options)
 
   self.destroyed = false
