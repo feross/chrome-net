@@ -476,7 +476,6 @@ Socket.prototype._onConnect = function () {
  */
 Socket.prototype.write = function (chunk, encoding, callback) {
   if (!Buffer.isBuffer(chunk)) chunk = new Buffer(chunk)
-  chunk = chunk.toArrayBuffer()
 
   // The stream is in "object mode" so it will accept a Uint8Array object
   return stream.Duplex.prototype.write.call(this, chunk, encoding, callback)
@@ -534,8 +533,7 @@ Socket.prototype._read = function (bufferSize) {
 
     } else {
       var buffer = readInfo.data
-      if (!Buffer.isBuffer(buffer)) buffer = new Buffer(buffer)
-      buffer = buffer.toArrayBuffer()
+      buffer = new Buffer(new Uint8Array(buffer))
 
       self.bytesRead += buffer.length
 

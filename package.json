@@ -4,7 +4,8 @@
   "description": "Use the Node `net` API in Chrome Apps",
   "main": "index.js",
   "dependencies": {
-    "core-util-is": "1.x"
+    "core-util-is": "1.x",
+    "ipaddr.js": "0.x"
   },
   "devDependencies": {
     "async": "0.x",
