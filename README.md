@@ -2,6 +2,8 @@ chrome-net
 ==========
 ### Use the Node `net` API in Chrome Apps
 
+[![Dependency Status](https://david-dm.org/feross/chrome-net.png)](https://david-dm.org/feross/chrome-net)
+
 This module lets you use the Node.js [net](http://nodejs.org/api/net.html) (TCP) API in [Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html).
 
 Instead of learning the quirks of Chrome's `chrome.socket` API for networking in Chrome Apps just **use the higher-level node API you're familiar with**. Then, compile your code with [browserify](https://github.com/substack/node-browserify) and you're all set!
