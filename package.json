@@ -9,8 +9,8 @@
   },
   "devDependencies": {
     "async": "0.x",
-    "browserify": "2.x",
-    "chrome-dgram": "*",
+    "browserify": "3.x",
+    "chrome-dgram": "1.x",
     "envify": "0.x",
     "once": "1.x",
     "portfinder": "0.x",
