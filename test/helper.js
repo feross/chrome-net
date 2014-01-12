@@ -8,6 +8,15 @@ var path = require('path')
 var CHROME = '/Applications/Google\\ Chrome\\ Canary.app/Contents/MacOS/Google\\ Chrome\\ Canary'
 var BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
 
+var isWin = !!process.platform.match(/^win/);
+var isLinux = !!process.platform.match(/^linux/);
+
+if(isLinux) {
+  CHROME = '/usr/bin/chromium-browser'
+}else if(isWin) {
+
+}
+
 exports.browserify = function (filename, env, cb) {
   if (!env) env = {}
   if (!cb) cb = function () {}
