@@ -1,8 +1,10 @@
-chrome-net
-==========
-### Use the Node `net` API in Chrome Apps
+# chrome-net
+[![Build Status](http://img.shields.io/travis/feross/chrome-net.svg)](https://travis-ci.org/feross/chrome-net)
+[![NPM Version](http://img.shields.io/npm/v/chrome-net.svg)](https://npmjs.org/package/chrome-net)
+[![NPM](http://img.shields.io/npm/dm/chrome-net.svg)](https://npmjs.org/package/chrome-net)
+[![Gittip](http://img.shields.io/gittip/feross.svg)](https://www.gittip.com/feross/)
 
-[![Dependency Status](https://david-dm.org/feross/chrome-net.png)](https://david-dm.org/feross/chrome-net)
+### Use the Node `net` API in Chrome Apps
 
 This module lets you use the Node.js [net](http://nodejs.org/api/net.html) (TCP) API in [Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html).
 
@@ -10,11 +12,13 @@ Instead of learning the quirks of Chrome's `chrome.socket` API for networking in
 
 This module is used by [webtorrent](https://github.com/feross/webtorrent).
 
-## Installation
+## install
 
-`npm install chrome-net`
+```
+npm install chrome-net
+```
 
-## Usage
+## methods
 
 Use node's `net` API, including all parameter list shorthands and variations.
 
@@ -62,10 +66,10 @@ server.listen(1337)
 
 See nodejs.org for full API documentation: [net](http://nodejs.org/api/net.html)
 
-## Contributing
+## contribute
 
 To run tests, use `npm test`. The tests will run TCP and UDP servers and launch a few different Chrome Packaged Apps with browserified client code. The tests currently require Chrome Canary on Mac. If you're on Windows or Linux, feel free to send a pull request to fix this limitation.
 
-## MIT License
+## license
 
-Copyright (c) [Feross Aboukhadijeh](http://feross.org) & John Hiesey
+MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org) & John Hiesey.
