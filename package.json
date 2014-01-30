@@ -1,6 +1,6 @@
 {
   "name": "chrome-net",
-  "version": "1.1.5",
+  "version": "1.2.0",
   "description": "Use the Node `net` API in Chrome Apps",
   "main": "index.js",
   "dependencies": {
