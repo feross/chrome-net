@@ -99,6 +99,7 @@ function Server (/* [options], listener */) {
     }
   }
 
+  self._destroyed = false
   self._connections = 0
 }
 
@@ -198,14 +199,33 @@ Server.prototype._onAccept = function (acceptInfo) {
   self.emit('connection', acceptedSocket)
 }
 
-// TODO
+/**
+ * Stops the server from accepting new connections and keeps existing
+ * connections. This function is asynchronous, the server is finally closed
+ * when all connections are ended and the server emits a 'close' event.
+ * Optionally, you can pass a callback to listen for the 'close' event.
+ * @param  {function} callback
+ */
 Server.prototype.close = function (callback) {
   var self = this
+  self._destroy(callback)
 }
 
-// TODO
 Server.prototype._destroy = function (exception, cb) {
   var self = this
+
+  if (cb)
+    this.once('close', cb)
+
+  chrome.socket.disconnect(self.id)
+  chrome.socket.destroy(self.id)
+
+  this._connections = 0
+  this._destroyed = true
+
+  self.emit('close')
+
+  return this
 }
 
 /**
