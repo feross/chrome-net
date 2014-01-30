@@ -5,9 +5,6 @@
  * The net module provides you with an asynchronous network wrapper. It
  * contains methods for creating both servers and clients (called streams).
  * You can include this module with require('chrome-net')
- *
- * TODO (unimplemented):
- * Socket.prototype.bufferSize
  */
 
 var EventEmitter = require('events').EventEmitter
@@ -676,6 +673,20 @@ Object.defineProperty(Socket.prototype, 'readyState', {
     } else {
       return 'closed'
     }
+  }
+})
+
+/**
+ * The number of characters currently buffered to be written.
+ * @type {number}
+ */
+Object.defineProperty(Socket.prototype, 'bufferSize', {
+  get: function () {
+    var self = this
+    if (self._pendingData)
+      return self._pendingData.length
+    else
+      return 0 // Unfortunately, chrome.socket does not make this info available
   }
 })
 
