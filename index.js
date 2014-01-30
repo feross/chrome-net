@@ -214,14 +214,17 @@ Server.prototype.close = function (callback) {
 Server.prototype._destroy = function (exception, cb) {
   var self = this
 
+  if (self._destroyed)
+    return
+
   if (cb)
     this.once('close', cb)
 
   chrome.socket.disconnect(self.id)
   chrome.socket.destroy(self.id)
 
-  this._connections = 0
   this._destroyed = true
+  this._connections = 0
 
   self.emit('close')
 
