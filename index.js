@@ -524,25 +524,27 @@ Socket.prototype._read = function (bufferSize) {
  * The amount of bytes sent.
  * @return {number}
  */
-Socket.prototype.__defineGetter__('bytesWritten', function () {
-  var self = this
-  var bytes = self._bytesDispatched
+Object.defineProperty(Socket.prototype, 'bytesWritten', {
+  get: function () {
+    var self = this
+    var bytes = self._bytesDispatched
 
-  self._writableState.toArrayBuffer().forEach(function (el) {
-    if (Buffer.isBuffer(el.chunk))
-      bytes += el.chunk.length
-    else
-      bytes += new Buffer(el.chunk, el.encoding).length
-  })
+    self._writableState.toArrayBuffer().forEach(function (el) {
+      if (Buffer.isBuffer(el.chunk))
+        bytes += el.chunk.length
+      else
+        bytes += new Buffer(el.chunk, el.encoding).length
+    })
 
-  if (self._pendingData) {
-    if (Buffer.isBuffer(self._pendingData))
-      bytes += self._pendingData.length
-    else
-      bytes += Buffer.byteLength(self._pendingData, self._pendingEncoding)
+    if (self._pendingData) {
+      if (Buffer.isBuffer(self._pendingData))
+        bytes += self._pendingData.length
+      else
+        bytes += Buffer.byteLength(self._pendingData, self._pendingEncoding)
+    }
+
+    return bytes
   }
-
-  return bytes
 })
 
 Socket.prototype.destroy = function (exception) {
