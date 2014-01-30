@@ -419,8 +419,21 @@ Socket.prototype._onConnect = function () {
     // this doesn't actually consume any bytes, because len=0
     self.read(0)
   })
-
 }
+
+/**
+ * The number of characters currently buffered to be written.
+ * @type {number}
+ */
+Object.defineProperty(Socket.prototype, 'bufferSize', {
+  get: function () {
+    var self = this
+    if (self._pendingData)
+      return self._pendingData.length
+    else
+      return 0 // Unfortunately, chrome.socket does not make this info available
+  }
+})
 
 /**
  * Sends data on the socket. The second parameter specifies the encoding in
@@ -649,20 +662,6 @@ Object.defineProperty(Socket.prototype, 'readyState', {
     } else {
       return 'closed'
     }
-  }
-})
-
-/**
- * The number of characters currently buffered to be written.
- * @type {number}
- */
-Object.defineProperty(Socket.prototype, 'bufferSize', {
-  get: function () {
-    var self = this
-    if (self._pendingData)
-      return self._pendingData.length
-    else
-      return 0 // Unfortunately, chrome.socket does not make this info available
   }
 })
 
