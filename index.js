@@ -14,30 +14,6 @@ var util = require('util')
 var ipaddr = require('ipaddr.js')
 
 /**
- * Returns an array [options] or [options, cb]
- * It is the same as the argument of Socket.prototype.connect().
- */
-function normalizeConnectArgs (args) {
-  var options = {}
-
-  if (is.isObject(args[0])) {
-    // connect(options, [cb])
-    options = args[0]
-  } else {
-    // connect(port, [host], [cb])
-    options.port = args[0]
-    if (is.isString(args[1])) {
-      options.host = args[1]
-    }
-  }
-
-  var cb = args[args.length - 1]
-  return is.isFunction(cb) ? [options, cb] : [options]
-}
-
-function toNumber (x) { return (x = Number(x)) >= 0 ? x : false }
-
-/**
  * Creates a new TCP server. The connectionListener argument is automatically
  * set as a listener for the 'connection' event.
  *
@@ -698,6 +674,10 @@ Socket.prototype.ref = function () {
   // No chrome.socket equivalent
 }
 
+//
+// EXPORTED HELPERS
+//
+
 exports.isIP = function (input) {
   try {
     ipaddr.parse(input)
@@ -723,4 +703,34 @@ exports.isIPv6 = function (input) {
   } catch (e) {
     return false
   }
+}
+
+//
+// HELPERS
+//
+
+/**
+ * Returns an array [options] or [options, cb]
+ * It is the same as the argument of Socket.prototype.connect().
+ */
+function normalizeConnectArgs (args) {
+  var options = {}
+
+  if (is.isObject(args[0])) {
+    // connect(options, [cb])
+    options = args[0]
+  } else {
+    // connect(port, [host], [cb])
+    options.port = args[0]
+    if (is.isString(args[1])) {
+      options.host = args[1]
+    }
+  }
+
+  var cb = args[args.length - 1]
+  return is.isFunction(cb) ? [options, cb] : [options]
+}
+
+function toNumber (x) {
+  return (x = Number(x)) >= 0 ? x : false
 }
