@@ -463,9 +463,9 @@ Socket.prototype._onConnect = function () {
  * @return {boolean}             flushed to kernel completely?
  */
 Socket.prototype.write = function (chunk, encoding, callback) {
-  if (!Buffer.isBuffer(chunk)) chunk = new Buffer(chunk)
+  if (!Buffer.isBuffer(chunk))
+    chunk = new Buffer(chunk, encoding)
 
-  // The stream is in "object mode" so it will accept a Uint8Array object
   return stream.Duplex.prototype.write.call(this, chunk, encoding, callback)
 }
 
@@ -664,7 +664,7 @@ Socket.prototype.address = function () {
 }
 
 Object.defineProperty(Socket.prototype, 'readyState', {
-  get: function() {
+  get: function () {
     var self = this
     if (self._connecting) {
       return 'opening'
