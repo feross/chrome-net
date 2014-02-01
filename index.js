@@ -748,6 +748,8 @@ function normalizeConnectArgs (args) {
     options.port = args[0]
     if (is.isString(args[1])) {
       options.host = args[1]
+    } else {
+      options.host = '127.0.0.1'
     }
   }
 
