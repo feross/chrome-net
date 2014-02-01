@@ -133,7 +133,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
   var port = toNumber(arguments[0]) || 0
 
   var address
-  if (is.isUndefined(arguments[1]) ||
+  if (arguments[1] == null ||
       is.isFunction(arguments[1]) ||
       is.isNumber(arguments[1])) {
     // The first argument is the port, no IP given.
