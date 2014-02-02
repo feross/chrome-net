@@ -176,7 +176,8 @@ Server.prototype._onAccept = function (acceptInfo) {
   var self = this
 
   if (acceptInfo.resultCode < 0) {
-    self.emit('error', new Error('Socket ' + self.id + ' failed to accept'))
+    self.emit('error', new Error('Socket ' + self.id + ' failed to accept (' +
+        acceptInfo.resultCode + ')'))
     self._destroy()
     return
   }
