@@ -163,9 +163,9 @@ Server.prototype.listen = function (/* variable arguments... */) {
       self._address = address
       self._port = port
 
-      self.emit('listening')
-
       chrome.socket.accept(self.id, self._onAccept.bind(self))
+
+      self.emit('listening')
     })
   })
 
