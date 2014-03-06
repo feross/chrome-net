@@ -11,6 +11,7 @@
   ],
   "dependencies": {
     "core-util-is": "~1.0.1",
+    "inherits": "^2.0.1",
     "ipaddr.js": "~0.1.2"
   },
   "devDependencies": {
