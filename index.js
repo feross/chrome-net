@@ -477,10 +477,11 @@ Object.defineProperty(Socket.prototype, 'bufferSize', {
  * @return {boolean}             flushed to kernel completely?
  */
 Socket.prototype.write = function (chunk, encoding, callback) {
+  var self = this
   if (!Buffer.isBuffer(chunk))
     chunk = new Buffer(chunk, encoding)
 
-  return stream.Duplex.prototype.write.call(this, chunk, encoding, callback)
+  return stream.Duplex.prototype.write.call(self, chunk, encoding, callback)
 }
 
 Socket.prototype._write = function (buffer, encoding, callback) {
@@ -504,6 +505,7 @@ Socket.prototype._write = function (buffer, encoding, callback) {
           writeInfo.bytesWritten)
       self.destroy(err, callback)
     } else {
+      self._resetTimeout()
       callback(null)
     }
   })
@@ -538,6 +540,7 @@ Socket.prototype._read = function (bufferSize) {
       buffer = new Buffer(new Uint8Array(buffer))
 
       self.bytesRead += buffer.length
+      self._resetTimeout()
 
       if (self.push(buffer)) // if returns true, then try to read more
         self._read(bufferSize)
@@ -612,9 +615,41 @@ Socket.prototype._destroy = function (exception, cb) {
   }
 }
 
+/**
+ * Sets the socket to timeout after timeout milliseconds of inactivity on the socket.
+ * By default net.Socket do not have a timeout. When an idle timeout is triggered the
+ * socket will receive a 'timeout' event but the connection will not be severed. The
+ * user must manually end() or destroy() the socket.
+ *
+ * If timeout is 0, then the existing idle timeout is disabled.
+ *
+ * The optional callback parameter will be added as a one time listener for the 'timeout' event.
+ *
+ * @param {number}   timeout
+ * @param {function} callback
+ */
 Socket.prototype.setTimeout = function (timeout, callback) {
   var self = this
+  if (callback) self.once('timeout', callback)
+  self._timeoutMs = timeout
+  self._resetTimeout()
+}
 
+Socket.prototype._onTimeout = function () {
+  var self = this
+  self._timeout = null
+  self._timeoutMs = 0
+  self.emit('timeout')
+}
+
+Socket.prototype._resetTimeout = function () {
+  var self = this
+  if (self._timeout) {
+    clearTimeout(self._timeout)
+  }
+  if (self._timeoutMs) {
+    self._timeout = setTimeout(self._onTimeout, self.timeoutMs)
+  }
 }
 
 /**
