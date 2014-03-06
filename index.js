@@ -8,10 +8,10 @@
  */
 
 var EventEmitter = require('events').EventEmitter
+var inherits = require('inherits')
+var ipaddr = require('ipaddr.js')
 var is = require('core-util-is')
 var stream = require('stream')
-var util = require('util')
-var ipaddr = require('ipaddr.js')
 
 /**
  * Creates a new TCP server. The connectionListener argument is automatically
@@ -57,7 +57,7 @@ exports.connect = exports.createConnection = function () {
   return Socket.prototype.connect.apply(s, args)
 }
 
-util.inherits(Server, EventEmitter)
+inherits(Server, EventEmitter)
 
 /**
  * Class: net.Server
@@ -273,7 +273,7 @@ Server.prototype.getConnections = function (callback) {
 }
 
 
-util.inherits(Socket, stream.Duplex)
+inherits(Socket, stream.Duplex)
 
 /**
  * Class: net.Socket
