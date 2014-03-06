@@ -102,6 +102,7 @@ function Server (/* [options], listener */) {
   self._destroyed = false
   self._connections = 0
 }
+exports.Server = Server
 
 /**
  * server.listen(port, [host], [backlog], [callback])
