@@ -13,6 +13,50 @@ var ipaddr = require('ipaddr.js')
 var is = require('core-util-is')
 var stream = require('stream')
 
+// Track open servers and sockets to route incoming sockets (via onAccept and onReceive)
+// to the right handlers.
+var servers = {}
+var sockets = {}
+
+if (typeof chrome !== 'undefined') {
+  chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+  chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+  chrome.sockets.tcp.onReceive.addListener(onReceive)
+  chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+}
+
+function onAccept (info) {
+  if (info.socketId in servers) {
+    servers[info.socketId]._onAccept(info.clientSocketId)
+  } else {
+    console.error('Unknown server socket id: ' + info.socketId)
+  }
+}
+
+function onAcceptError (info) {
+  if (info.socketId in servers) {
+    servers[info.socketId]._onAcceptError(info.resultCode)
+  } else {
+    console.error('Unknown server socket id: ' + info.socketId)
+  }
+}
+
+function onReceive (info) {
+  if (info.socketId in sockets) {
+    sockets[info.socketId]._onReceive(info.data)
+  } else {
+    console.error('Unknown socket id: ' + info.socketId)
+  }
+}
+
+function onReceiveError (info) {
+  if (info.socketId in sockets) {
+    sockets[info.socketId]._onReceiveError(info.resultCode)
+  } else {
+    console.error('Unknown socket id: ' + info.socketId)
+  }
+}
+
 /**
  * Creates a new TCP server. The connectionListener argument is automatically
  * set as a listener for the 'connection' event.
@@ -147,16 +191,13 @@ Server.prototype.listen = function (/* variable arguments... */) {
   // When the ip is omitted it can be the second argument.
   var backlog = toNumber(arguments[1]) || toNumber(arguments[2]) || undefined
 
-  chrome.socket.create('tcp', {}, function (createInfo) {
+  chrome.sockets.tcpServer.create(function (createInfo) {
     self.id = createInfo.socketId
 
-    chrome.socket.listen(self.id,
-                         address,
-                         port,
-                         backlog,
-                         function (result) {
+    chrome.sockets.tcpServer.listen(self.id, address, port, backlog, function (result) {
       if (result < 0) {
-        self.emit('error', new Error('Socket ' + self.id + ' failed to listen'))
+        self.emit('error', new Error('Socket ' + self.id + ' failed to listen. ' +
+          chrome.runtime.lastError.message))
         self._destroy()
         return
       }
@@ -164,8 +205,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
       self._address = address
       self._port = port
 
-      chrome.socket.accept(self.id, self._onAccept.bind(self))
-
+      servers[self.id] = self
       self.emit('listening')
     })
   })
@@ -173,21 +213,14 @@ Server.prototype.listen = function (/* variable arguments... */) {
   return self
 }
 
-Server.prototype._onAccept = function (acceptInfo) {
+Server.prototype._onAccept = function (clientSocketId) {
   var self = this
 
-  if (acceptInfo.resultCode < 0) {
-    self.emit('error', new Error('Socket ' + self.id + ' failed to accept (' +
-        acceptInfo.resultCode + ')'))
-    self._destroy()
-    return
-  }
-
-  // Set the `maxConnections property to reject connections when the server's
+  // Set the `maxConnections` property to reject connections when the server's
   // connection count gets high.
   if (self.maxConnections && self._connections >= self.maxConnections) {
-    chrome.socket.disconnect(acceptInfo.socketId)
-    chrome.socket.destroy(acceptInfo.socketId)
+    chrome.sockets.tcpServer.disconnect(clientSocketId)
+    chrome.sockets.tcpServer.close(clientSocketId)
     console.warn('Rejected connection - hit `maxConnections` limit')
     return
   }
@@ -196,9 +229,18 @@ Server.prototype._onAccept = function (acceptInfo) {
 
   var acceptedSocket = new Socket({
     server: self,
-    id: acceptInfo.socketId
+    id: clientSocketId
   })
   self.emit('connection', acceptedSocket)
+
+  chrome.sockets.tcp.setPaused(clientSocketId, false)
+}
+
+Server.prototype._onAcceptError = function (resultCode) {
+  var self = this
+  self.emit('error', new Error('Socket ' + self.id + ' failed to accept (' +
+    resultCode + ')'))
+  self._destroy()
 }
 
 /**
@@ -222,15 +264,15 @@ Server.prototype._destroy = function (exception, cb) {
   if (cb)
     this.once('close', cb)
 
-  chrome.socket.disconnect(self.id)
-  chrome.socket.destroy(self.id)
-
   this._destroyed = true
   this._connections = 0
+  delete servers[self.id]
 
-  self.emit('close')
-
-  return this
+  chrome.sockets.tcpServer.disconnect(self.id, function () {
+    chrome.sockets.tcpServer.close(self.id, function () {
+      self.emit('close')
+    })
+  })
 }
 
 /**
@@ -359,13 +401,12 @@ function Socket (options) {
 
   self._bytesDispatched = 0
   self._connecting = false
-  self._outstandingRead = false
 
   if (options.server) {
     self.server = options.server
     self.id = options.id
 
-    // If server socket, then it's already connected.
+    // For incoming sockets (from server), it's already connected.
     self._connecting = true
     self._onConnect()
   }
@@ -400,23 +441,20 @@ Socket.prototype.connect = function (options, cb) {
 
   if (self._connecting)
     return
-
   self._connecting = true
+
+  var port = Number(options.port)
 
   if (is.isFunction(cb)) {
     self.once('connect', cb)
   }
 
-  chrome.socket.create('tcp', {}, function (createInfo) {
+  chrome.sockets.tcp.create(function (createInfo) {
     self.id = createInfo.socketId
 
-    chrome.socket.connect(self.id,
-                          options.host,
-                          Number(options.port),
-                          function (result) {
+    chrome.sockets.tcp.connect(self.id, options.host, port, function (result) {
       if (result < 0) {
-        self.destroy(new Error('Socket ' + self.id + ' connect error ' +
-            result))
+        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result))
         return
       }
 
@@ -430,7 +468,8 @@ Socket.prototype.connect = function (options, cb) {
 Socket.prototype._onConnect = function () {
   var self = this
 
-  chrome.socket.getInfo(self.id, function (result) {
+  sockets[self.id] = self
+  chrome.sockets.tcp.getInfo(self.id, function (result) {
     self.remoteAddress = result.peerAddress
     self.remotePort = result.peerPort
     self.localAddress = result.localAddress
@@ -499,11 +538,13 @@ Socket.prototype._write = function (buffer, encoding, callback) {
   self._pendingData = null
   self._pendingEncoding = null
 
-  chrome.socket.write(self.id, buffer.toArrayBuffer(), function (writeInfo) {
-    if (writeInfo.bytesWritten < 0) {
-      var err = new Error('Socket ' + self.id + ' write error ' +
-          writeInfo.bytesWritten)
-      self.destroy(err, callback)
+  // assuming buffer is browser implementation (`buffer` package on npm)
+  chrome.sockets.tcp.send(self.id, buffer.buffer /* buffer.toArrayBuffer() is slower */,
+                          function (sendInfo) {
+    if (sendInfo.resultCode < 0) {
+      var err = new Error('Socket ' + self.id + ' write error: ' + sendInfo.resultCode)
+      callback(err)
+      self.destroy(err)
     } else {
       self._resetTimeout()
       callback(null)
@@ -520,32 +561,29 @@ Socket.prototype._read = function (bufferSize) {
     return
   }
 
-  if (self._outstandingRead)
-    return
+  chrome.sockets.tcp.setPaused(self.id, false)
+}
 
-  self._outstandingRead = true
+Socket.prototype._onReceive = function (data) {
+  var self = this
+  var buffer = new Buffer(new Uint8Array(data))
 
-  chrome.socket.read(self.id, bufferSize, function (readInfo) {
-    self._outstandingRead = false
-    if (readInfo.resultCode === 0) {
-      self.push(null)
-      self.destroy()
+  self.bytesRead += buffer.length
+  self._resetTimeout()
 
-    } else if (readInfo.resultCode < 0) {
-      self.destroy(new Error('Socket ' + self.id + ' read error ' +
-          readInfo.resultCode))
+  if (!self.push(buffer)) { // if returns false, then apply backpressure
+    chrome.sockets.tcp.setPaused(self.id, true)
+  }
+}
 
-    } else {
-      var buffer = readInfo.data
-      buffer = new Buffer(new Uint8Array(buffer))
-
-      self.bytesRead += buffer.length
-      self._resetTimeout()
-
-      if (self.push(buffer)) // if returns true, then try to read more
-        self._read(bufferSize)
-    }
-  })
+Socket.prototype._onReceiveError = function (resultCode) {
+  var self = this
+  if (resultCode === 0) {
+    self.push(null)
+    self.destroy()
+  } else if (resultCode < 0) {
+    self.destroy(new Error('Socket ' + self.id + ' read error ' + resultCode))
+  }
 }
 
 /**
@@ -599,20 +637,21 @@ Socket.prototype._destroy = function (exception, cb) {
     return
   }
 
-  self._connecting = false
-  this.readable = this.writable = false
-
-  chrome.socket.disconnect(self.id)
-  chrome.socket.destroy(self.id)
-
-  self.emit('close', !!exception)
-  fireErrorCallbacks()
-
-  self.destroyed = true
-
   if (this.server) {
     this.server._connections -= 1
   }
+
+  self._connecting = false
+  this.readable = this.writable = false
+  self.destroyed = true
+  delete sockets[self.id]
+
+  chrome.sockets.tcp.disconnect(self.id, function () {
+    chrome.sockets.tcp.close(self.id, function () {
+      self.emit('close', !!exception)
+      fireErrorCallbacks()
+    })
+  })
 }
 
 /**
@@ -670,7 +709,7 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
   // backwards compatibility: assume true when `enable` is omitted
   noDelay = is.isUndefined(noDelay) ? true : !!noDelay
   if (!callback) callback = function () {}
-  chrome.socket.setNoDelay(self.id, noDelay, callback)
+  chrome.sockets.tcp.setNoDelay(self.id, noDelay, callback)
 }
 
 /**
@@ -694,7 +733,7 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
 Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
   var self = this
   if (!callback) callback = function () {}
-  chrome.socket.setKeepAlive(self.id, !!enable, ~~(initialDelay / 1000),
+  chrome.sockets.tcp.setKeepAlive(self.id, !!enable, ~~(initialDelay / 1000),
       callback)
 }
 
