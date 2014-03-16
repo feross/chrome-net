@@ -11,9 +11,10 @@ server.on('error', function (err) {
   console.error(err.stack)
 })
 
+var readySock
 server.on('listening', function () {
   // Report to node that the TCP server is listening
-  var readySock = dgram.createSocket('udp4')
+  readySock = dgram.createSocket('udp4')
   readySock.on('error', function (err) {
     console.error(err.stack)
   })
@@ -24,19 +25,21 @@ server.on('connection', function (sock) {
   console.log('Connection opened from ' + sock.remoteAddress + ':' + sock.remotePort)
 
   sock.on('error', function (err) {
-    console.error(err)
-    console.log(err.stack)
+    console.error(err.stack)
     sock.write(err.message)
   })
 
   sock.on('data', function (data) {
-    console.log('data')
-    console.log(data.toString())
     if (data.toString() === 'beep') {
       sock.write('boop')
     } else {
       sock.write('fail')
     }
+  })
+
+  // test that client stream ends correctly
+  sock.on('end', function () {
+    readySock.send('end', 0, 'end'.length, READY_PORT, '127.0.0.1')
   })
 })
 

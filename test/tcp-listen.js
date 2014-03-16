@@ -29,28 +29,32 @@ test('TCP listen works (echo test)', function (t) {
     })
 
     readySocket.on('message', function (message, remote) {
-      t.equal(message.toString(), 'listening', 'Client listens')
+      if (message.toString() === 'listening') {
+        t.pass('Client listens')
 
-      // Do TCP echo test
-      var socket = net.createConnection({ port: r.listenPort })
-      socket.on('connect', function () {
-        socket.write('beep', 'utf8')
-      })
+        // Do TCP echo test
+        var socket = net.createConnection({ port: r.listenPort })
+        socket.on('connect', function () {
+          socket.write('beep', 'utf8')
+        })
 
-      var i = 0
-      socket.on('data', function (data) {
-        if (i === 0) {
-          t.equal(data.toString(), 'boop', 'Beep/boop looks good')
-          readySocket.close()
-          socket.end()
-          child.kill()
-          t.end()
-        } else {
-          t.fail('TCP server sent unexpected data')
-        }
-        i += 1
-      })
+        var i = 0
+        socket.on('data', function (data) {
+          if (i === 0) {
+            t.equal(data.toString(), 'boop', 'Beep/boop looks good')
+            socket.end()
+          } else {
+            t.fail('TCP server sent unexpected data')
+          }
+          i += 1
+        })
 
+      } else if (message.toString() === 'end') {
+        t.pass('Client stream ended correctly')
+        readySocket.close()
+        child.kill()
+        t.end()
+      }
     })
 
     readySocket.bind(r.readyPort)

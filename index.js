@@ -578,11 +578,11 @@ Socket.prototype._onReceive = function (data) {
 
 Socket.prototype._onReceiveError = function (resultCode) {
   var self = this
-  if (resultCode === 0) {
+  if (resultCode === -100) {
     self.push(null)
     self.destroy()
   } else if (resultCode < 0) {
-    self.destroy(new Error('Socket ' + self.id + ' read error ' + resultCode))
+    self.destroy(new Error('Socket ' + self.id + ' receive error ' + resultCode))
   }
 }
 
