@@ -388,8 +388,6 @@ function Socket (options) {
   if (is.isUndefined(options))
     options = {}
 
-  options.decodeStrings = false // we will handle strings directly
-
   stream.Duplex.call(self, options)
 
   self.destroyed = false
