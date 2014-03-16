@@ -231,7 +231,9 @@ Server.prototype._onAccept = function (clientSocketId) {
     server: self,
     id: clientSocketId
   })
-  self.emit('connection', acceptedSocket)
+  acceptedSocket.on('connect', function () {
+    self.emit('connection', acceptedSocket)
+  })
 
   chrome.sockets.tcp.setPaused(clientSocketId, false)
 }
