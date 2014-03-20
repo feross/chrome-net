@@ -7,7 +7,7 @@
 
 This module lets you use the Node.js [net](http://nodejs.org/api/net.html) (TCP) API in [Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html).
 
-Instead of learning the quirks of Chrome's `chrome.socket` API for networking in Chrome Apps just **use the higher-level node API you're familiar with**. Then, compile your code with [browserify](https://github.com/substack/node-browserify) and you're all set!
+Instead of learning the quirks of Chrome's `chrome.sockets` API for networking in Chrome Apps just **use the higher-level node API you're familiar with**. Then, compile your code with [browserify](https://github.com/substack/node-browserify) and you're all set!
 
 This module is used by [webtorrent](https://github.com/feross/webtorrent).
 
