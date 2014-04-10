@@ -16,7 +16,7 @@ npm install chrome-net
 
 ## methods
 
-Use node's `net` API, including all parameter list shorthands and variations.
+Use node's `net` API, including all parameter list shorthands and variations.
 
 Example TCP client:
 
