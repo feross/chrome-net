@@ -687,7 +687,7 @@ Socket.prototype._resetTimeout = function () {
     clearTimeout(self._timeout)
   }
   if (self._timeoutMs) {
-    self._timeout = setTimeout(self._onTimeout, self.timeoutMs)
+    self._timeout = setTimeout(self._onTimeout.bind(self), self.timeoutMs)
   }
 }
 
