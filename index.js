@@ -277,6 +277,18 @@ Server.prototype._destroy = function (exception, cb) {
   })
 }
 
+Socket.prototype.destroySoon = function () {
+  var self = this
+
+  if (self.writable)
+    self.end()
+
+  if (self._writableState.finished)
+    self.destroy()
+  else
+    self.once('finish', self._destroy.bind(self))
+}
+
 /**
  * Returns the bound address, the address family name and port of the socket
  * as reported by the operating system. Returns an object with three
