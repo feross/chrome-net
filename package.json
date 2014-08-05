@@ -1,7 +1,7 @@
 {
   "name": "chrome-net",
   "description": "Use the Node `net` API in Chrome Apps",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "author": "Feross Aboukhadijeh <feross@feross.org> (http://feross.org/)",
   "bugs": {
     "url": "https://github.com/feross/chrome-net/issues"
