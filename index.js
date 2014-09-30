@@ -53,7 +53,7 @@ function onReceiveError (info) {
   if (info.socketId in sockets) {
     sockets[info.socketId]._onReceiveError(info.resultCode)
   } else {
-    if (info.resultCode == -100) // net::ERR_CONNECTION_CLOSED
+    if (info.resultCode === -100) // net::ERR_CONNECTION_CLOSED
       return
     console.error('Unknown socket id: ' + info.socketId)
   }
