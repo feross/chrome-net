@@ -456,7 +456,8 @@ Socket.prototype.connect = function (options, cb) {
 
     chrome.sockets.tcp.connect(self.id, options.host, port, function (result) {
       if (result < 0) {
-        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result))
+        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result
+          + ': ' + chrome.runtime.lastError.message))
         return
       }
 
