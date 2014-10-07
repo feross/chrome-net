@@ -452,6 +452,11 @@ Socket.prototype.connect = function (options, cb) {
   }
 
   chrome.sockets.tcp.create(function (createInfo) {
+    if (self.destroyed) {
+      chrome.sockets.tcp.close(createInfo.socketId)
+      return
+    }
+
     self.id = createInfo.socketId
 
     chrome.sockets.tcp.connect(self.id, options.host, port, function (result) {
@@ -649,12 +654,17 @@ Socket.prototype._destroy = function (exception, cb) {
   self.destroyed = true
   delete sockets[self.id]
 
-  chrome.sockets.tcp.disconnect(self.id, function () {
-    chrome.sockets.tcp.close(self.id, function () {
-      self.emit('close', !!exception)
-      fireErrorCallbacks()
+  // if _destroy() has been called before chrome.sockets.tcp.create()
+  // callback, we don't have an id. Therefore we don't need to close
+  // or disconnect
+  if (self.id) {
+    chrome.sockets.tcp.disconnect(self.id, function () {
+      chrome.sockets.tcp.close(self.id, function () {
+        self.emit('close', !!exception)
+        fireErrorCallbacks()
+      })
     })
-  })
+  }
 }
 
 Socket.prototype.destroySoon = function () {
