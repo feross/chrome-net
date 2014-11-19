@@ -403,6 +403,9 @@ function Socket (options) {
 
   self._bytesDispatched = 0
   self._connecting = false
+  
+  self.ondata = null
+  self.onend = null
 
   if (options.server) {
     self.server = options.server
@@ -575,10 +578,12 @@ Socket.prototype._read = function (bufferSize) {
 Socket.prototype._onReceive = function (data) {
   var self = this
   var buffer = new Buffer(new Uint8Array(data))
-
+  var offset = self.bytesRead
+  
   self.bytesRead += buffer.length
   self._resetTimeout()
 
+  if (self.ondata) self.ondata(buffer, offset, self.bytesRead)
   if (!self.push(buffer)) { // if returns false, then apply backpressure
     chrome.sockets.tcp.setPaused(self.id, true)
   }
@@ -587,6 +592,7 @@ Socket.prototype._onReceive = function (data) {
 Socket.prototype._onReceiveError = function (resultCode) {
   var self = this
   if (resultCode === -100) {
+    if (self.onend) self.once('end', self.onend)
     self.push(null)
     self.destroy()
   } else if (resultCode < 0) {
