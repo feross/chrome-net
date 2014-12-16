@@ -403,7 +403,7 @@ function Socket (options) {
 
   self._bytesDispatched = 0
   self._connecting = false
-  
+
   self.ondata = null
   self.onend = null
 
@@ -416,6 +416,7 @@ function Socket (options) {
     self._onConnect()
   }
 }
+exports.Socket = Socket
 
 /**
  * socket.connect(port, [host], [connectListener])
@@ -579,7 +580,7 @@ Socket.prototype._onReceive = function (data) {
   var self = this
   var buffer = new Buffer(new Uint8Array(data))
   var offset = self.bytesRead
-  
+
   self.bytesRead += buffer.length
   self._resetTimeout()
 
