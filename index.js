@@ -204,11 +204,14 @@ Server.prototype.listen = function (/* variable arguments... */) {
         return
       }
 
-      self._address = address
-      self._port = port
-
       servers[self.id] = self
-      self.emit('listening')
+
+      chrome.sockets.tcpServer.getInfo(self.id, function (socketInfo) {
+        self._address = socketInfo.localAddress
+        self._port = socketInfo.localPort
+        self.emit('listening')
+      })
+
     })
   })
 
