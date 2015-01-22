@@ -21,7 +21,7 @@
     "envify": "1.x",
     "once": "1.x",
     "portfinder": "0.x",
-    "tape": "2.x",
+    "tape": "^3.4.0",
     "through": "2.x"
   },
   "homepage": "https://github.com/feross/chrome-net",
