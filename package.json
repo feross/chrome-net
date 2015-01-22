@@ -18,7 +18,7 @@
     "async": "0.x",
     "browserify": "3.x",
     "chrome-dgram": "1.x",
-    "envify": "1.x",
+    "envify": "^3.2.0",
     "once": "1.x",
     "portfinder": "0.x",
     "tape": "^3.4.0",
