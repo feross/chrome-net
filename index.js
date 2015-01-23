@@ -554,7 +554,11 @@ Socket.prototype._write = function (buffer, encoding, callback) {
   self._pendingEncoding = null
 
   // assuming buffer is browser implementation (`buffer` package on npm)
-  chrome.sockets.tcp.send(self.id, buffer.buffer /* buffer.toArrayBuffer() is slower */,
+  var buf = buffer.buffer
+  if(buffer.byteOffset || buffer.byteLength != buf.byteLength)
+      buf = buf.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+
+  chrome.sockets.tcp.send(self.id, buf /* buffer.toArrayBuffer() is slower */,
                           function (sendInfo) {
     if (sendInfo.resultCode < 0) {
       var err = new Error('Socket ' + self.id + ' write error: ' + sendInfo.resultCode)
