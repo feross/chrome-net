@@ -68,7 +68,7 @@ function onReceiveError (info) {
  * @return {Server}
  */
 exports.createServer = function (options, listener) {
-  return new Server(arguments[0], arguments[1])
+  return new Server(options, listener)
 }
 
 /**
