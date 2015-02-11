@@ -3,7 +3,6 @@ var net = require('../../')
 var PORT = Number(process.env.PORT)
 
 var client = new net.Socket()
-client.connect(PORT,'127.0.0.1')
 
 // If any errors are emitted, log them
 client.on('error', function (err) {
@@ -18,6 +17,7 @@ client.on('data', function (data) {
   }
 })
 
+client.connect(PORT,'127.0.0.1')
 client.write('beep')
 
 // TODO:
