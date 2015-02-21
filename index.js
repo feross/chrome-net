@@ -577,7 +577,7 @@ Socket.prototype._write = function (buffer, encoding, callback) {
 
 Socket.prototype._read = function (bufferSize) {
   var self = this
-  if (self._connecting) {
+  if (self._connecting || !self.id) {
     self.once('connect', self._read.bind(self, bufferSize))
     return
   }
