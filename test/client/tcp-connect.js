@@ -26,7 +26,6 @@ client.write('beep')
 // - test bytesWritten
 // - test bytesRead
 
-
 // streaming
 // var through = require('through')
 // client.pipe(through(function (data) {

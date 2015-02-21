@@ -1,3 +1,5 @@
+/*global chrome */
+
 /**
  * net
  * ===
@@ -132,7 +134,9 @@ function Server (/* [options], listener */) {
   if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
   EventEmitter.call(self)
 
+  /*eslint-disable no-unused-vars*/
   var options
+  /*eslint-enable no-unused-vars*/
 
   if (is.isFunction(arguments[0])) {
     options = {}
@@ -211,7 +215,6 @@ Server.prototype.listen = function (/* variable arguments... */) {
         self._port = socketInfo.localPort
         self.emit('listening')
       })
-
     })
   })
 
@@ -320,7 +323,6 @@ Server.prototype.getConnections = function (callback) {
     callback(null, self._connections)
   })
 }
-
 
 inherits(Socket, stream.Duplex)
 
@@ -446,10 +448,10 @@ exports.Socket = Socket
  * @return {Socket}   this socket (for chaining)
  */
 Socket.prototype.connect = function () {
-  var args    = normalizeConnectArgs(arguments)
-  var self    = this
+  var self = this
+  var args = normalizeConnectArgs(arguments)
   var options = args[0]
-  var cb      = args[1]
+  var cb = args[1]
 
   if (self._connecting)
     return
@@ -471,8 +473,8 @@ Socket.prototype.connect = function () {
 
     chrome.sockets.tcp.connect(self.id, options.host, port, function (result) {
       if (result < 0) {
-        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result
-          + ': ' + chrome.runtime.lastError.message))
+        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result +
+          ': ' + chrome.runtime.lastError.message))
         return
       }
 

@@ -17,13 +17,12 @@ client.on('data', function (data) {
   }
 })
 
-client.connect(PORT,'127.0.0.1')
+client.connect(PORT, '127.0.0.1')
 client.write('beep')
 
 // TODO:
 // - test bytesWritten
 // - test bytesRead
-
 
 // streaming
 // var through = require('through')

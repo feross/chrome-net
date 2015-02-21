@@ -21,12 +21,11 @@ client.on('data', function (data) {
   }
 })
 
-client.write(new Buffer('|beep|').slice(1,5))
+client.write(new Buffer('|beep|').slice(1, 5))
 
 // TODO:
 // - test bytesWritten
 // - test bytesRead
-
 
 // streaming
 // var through = require('through')

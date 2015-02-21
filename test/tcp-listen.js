@@ -48,7 +48,6 @@ test('TCP listen works (echo test)', function (t) {
           }
           i += 1
         })
-
       } else if (message.toString() === 'end') {
         t.pass('Client stream ended correctly')
         readySocket.close()
