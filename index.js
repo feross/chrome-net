@@ -445,8 +445,11 @@ exports.Socket = Socket
  * @param  {function} cb
  * @return {Socket}   this socket (for chaining)
  */
-Socket.prototype.connect = function (options, cb) {
-  var self = this
+Socket.prototype.connect = function () {
+  var args    = normalizeConnectArgs(arguments)
+  var self    = this
+  var options = args[0]
+  var cb      = args[1]
 
   if (self._connecting)
     return
