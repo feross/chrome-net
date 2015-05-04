@@ -21,7 +21,7 @@
     "envify": "^3.2.0",
     "once": "1.x",
     "portfinder": "0.x",
-    "standard": "^2.7.1",
+    "standard": "^3.7.3",
     "tape": "^4.0.0",
     "through": "2.x"
   },
