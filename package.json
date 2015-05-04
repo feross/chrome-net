@@ -22,7 +22,7 @@
     "once": "1.x",
     "portfinder": "0.x",
     "standard": "^2.7.1",
-    "tape": "^3.4.0",
+    "tape": "^4.0.0",
     "through": "2.x"
   },
   "homepage": "https://github.com/feross/chrome-net",
