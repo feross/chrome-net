@@ -55,8 +55,7 @@ function onReceiveError (info) {
   if (info.socketId in sockets) {
     sockets[info.socketId]._onReceiveError(info.resultCode)
   } else {
-    if (info.resultCode === -100) // net::ERR_CONNECTION_CLOSED
-      return
+    if (info.resultCode === -100) return // net::ERR_CONNECTION_CLOSED
     console.error('Unknown socket id: ' + info.socketId)
   }
 }
@@ -268,11 +267,9 @@ Server.prototype.close = function (callback) {
 Server.prototype._destroy = function (exception, cb) {
   var self = this
 
-  if (self._destroyed)
-    return
+  if (self._destroyed) return
 
-  if (cb)
-    this.once('close', cb)
+  if (cb) this.once('close', cb)
 
   this._destroyed = true
   this._connections = 0
@@ -394,8 +391,7 @@ function Socket (options) {
   var self = this
   if (!(self instanceof Socket)) return new Socket(options)
 
-  if (is.isUndefined(options))
-    options = {}
+  if (is.isUndefined(options)) options = {}
 
   stream.Duplex.call(self, options)
 
@@ -453,8 +449,7 @@ Socket.prototype.connect = function () {
   var options = args[0]
   var cb = args[1]
 
-  if (self._connecting)
-    return
+  if (self._connecting) return
   self._connecting = true
 
   var port = Number(options.port)
@@ -512,10 +507,8 @@ Socket.prototype._onConnect = function () {
 Object.defineProperty(Socket.prototype, 'bufferSize', {
   get: function () {
     var self = this
-    if (self._pendingData)
-      return self._pendingData.length
-    else
-      return 0 // Unfortunately, chrome.socket does not make this info available
+    if (self._pendingData) return self._pendingData.length
+    else return 0 // Unfortunately, chrome.socket does not make this info available
   }
 })
 
@@ -537,8 +530,7 @@ Object.defineProperty(Socket.prototype, 'bufferSize', {
  */
 Socket.prototype.write = function (chunk, encoding, callback) {
   var self = this
-  if (!Buffer.isBuffer(chunk))
-    chunk = new Buffer(chunk, encoding)
+  if (!Buffer.isBuffer(chunk)) chunk = new Buffer(chunk, encoding)
 
   return stream.Duplex.prototype.write.call(self, chunk, encoding, callback)
 }
@@ -560,8 +552,9 @@ Socket.prototype._write = function (buffer, encoding, callback) {
 
   // assuming buffer is browser implementation (`buffer` package on npm)
   var buf = buffer.buffer
-  if (buffer.byteOffset || buffer.byteLength !== buf.byteLength)
+  if (buffer.byteOffset || buffer.byteLength !== buf.byteLength) {
     buf = buf.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+  }
 
   chrome.sockets.tcp.send(self.id, buf, function (sendInfo) {
     if (sendInfo.resultCode < 0) {
@@ -622,17 +615,13 @@ Object.defineProperty(Socket.prototype, 'bytesWritten', {
     var bytes = self._bytesDispatched
 
     self._writableState.toArrayBuffer().forEach(function (el) {
-      if (Buffer.isBuffer(el.chunk))
-        bytes += el.chunk.length
-      else
-        bytes += new Buffer(el.chunk, el.encoding).length
+      if (Buffer.isBuffer(el.chunk)) bytes += el.chunk.length
+      else bytes += new Buffer(el.chunk, el.encoding).length
     })
 
     if (self._pendingData) {
-      if (Buffer.isBuffer(self._pendingData))
-        bytes += self._pendingData.length
-      else
-        bytes += Buffer.byteLength(self._pendingData, self._pendingEncoding)
+      if (Buffer.isBuffer(self._pendingData)) bytes += self._pendingData.length
+      else bytes += Buffer.byteLength(self._pendingData, self._pendingEncoding)
     }
 
     return bytes
@@ -688,13 +677,10 @@ Socket.prototype._destroy = function (exception, cb) {
 Socket.prototype.destroySoon = function () {
   var self = this
 
-  if (self.writable)
-    self.end()
+  if (self.writable) self.end()
 
-  if (self._writableState.finished)
-    self.destroy()
-  else
-    self.once('finish', self._destroy.bind(self))
+  if (self._writableState.finished) self.destroy()
+  else self.once('finish', self._destroy.bind(self))
 }
 
 /**
