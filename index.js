@@ -133,9 +133,7 @@ function Server (/* [options], listener */) {
   if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
   EventEmitter.call(self)
 
-  /*eslint-disable no-unused-vars*/
-  var options
-  /*eslint-enable no-unused-vars*/
+  var options // eslint-disable-line
 
   if (is.isFunction(arguments[0])) {
     options = {}
