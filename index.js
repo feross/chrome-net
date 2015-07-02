@@ -201,8 +201,10 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
     chrome.sockets.tcpServer.listen(self.id, address, port, backlog, function (result) {
       if (result < 0) {
-        self.emit('error', new Error('Socket ' + self.id + ' failed to listen. ' +
-          chrome.runtime.lastError.message))
+        var err = new Error('Socket ' + self.id + ' failed to listen. ' +
+          chrome.runtime.lastError.message)
+        err.code = 'EADDRINUSE'
+        self.emit('error', err)
         self._destroy()
         return
       }
@@ -247,8 +249,10 @@ Server.prototype._onAccept = function (clientSocketId) {
 
 Server.prototype._onAcceptError = function (resultCode) {
   var self = this
-  self.emit('error', new Error('Socket ' + self.id + ' failed to accept (' +
-    resultCode + ')'))
+  var err = new Error('Socket ' + self.id + ' failed to accept (' +
+    resultCode + ')')
+  err.code = 'EPIPE' // TODO: this may not be correct
+  self.emit('error', err)
   self._destroy()
 }
 
@@ -468,8 +472,10 @@ Socket.prototype.connect = function () {
 
     chrome.sockets.tcp.connect(self.id, options.host, port, function (result) {
       if (result < 0) {
-        self.destroy(new Error('Socket ' + self.id + ' connect error ' + result +
-          ': ' + chrome.runtime.lastError.message))
+        var err = new Error('Socket ' + self.id + ' connect error ' + result +
+          ': ' + chrome.runtime.lastError.message)
+        err.code = 'ECONNREFUSED'
+        self.destroy(err)
         return
       }
 
@@ -559,6 +565,7 @@ Socket.prototype._write = function (buffer, encoding, callback) {
   chrome.sockets.tcp.send(self.id, buf, function (sendInfo) {
     if (sendInfo.resultCode < 0) {
       var err = new Error('Socket ' + self.id + ' write error: ' + sendInfo.resultCode)
+      err.code = 'EPIPE'
       callback(err)
       self.destroy(err)
     } else {
@@ -601,7 +608,9 @@ Socket.prototype._onReceiveError = function (resultCode) {
     self.push(null)
     self.destroy()
   } else if (resultCode < 0) {
-    self.destroy(new Error('Socket ' + self.id + ' receive error ' + resultCode))
+    var err = new Error('Socket ' + self.id + ' receive error ' + resultCode)
+    err.code = 'EPIPE' // TODO: this may not be correct
+    self.destroy(err)
   }
 }
 
