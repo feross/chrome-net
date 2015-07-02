@@ -1,4 +1,4 @@
-var async = require('async')
+var auto = require('run-auto')
 var dgram = require('dgram')
 var helper = require('./helper')
 var net = require('net')
@@ -6,7 +6,7 @@ var portfinder = require('portfinder')
 var test = require('tape')
 
 test('TCP listen works (echo test)', function (t) {
-  async.auto({
+  auto({
     listenPort: function (cb) {
       portfinder.getPort(cb)
     },
