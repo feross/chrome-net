@@ -5,7 +5,15 @@ var fs = require('fs')
 var once = require('once')
 var path = require('path')
 
-var CHROME = process.env.CHROME || '/Applications/Google\\ Chrome\\ Canary.app/Contents/MacOS/Google\\ Chrome\\ Canary'
+var CHROME
+if (process.env.CHROME) {
+  CHROME = process.env.CHROME
+} else if (process.platform === 'win32') {
+  CHROME = '"%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe"'
+} else {
+  CHROME = '/Applications/Google\\ Chrome\\ Canary.app/Contents/MacOS/Google\\ Chrome\\ Canary'
+}
+
 var BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
 
 exports.browserify = function (filename, env, cb) {
