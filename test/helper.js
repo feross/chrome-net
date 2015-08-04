@@ -1,4 +1,5 @@
 var browserify = require('browserify')
+var builtins = require('browserify/lib/builtins.js')
 var cp = require('child_process')
 var envify = require('envify/custom')
 var fs = require('fs')
@@ -15,6 +16,9 @@ if (process.env.CHROME) {
 }
 
 var BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
+
+builtins.net = require.resolve('../')
+builtins.dgram = require.resolve('chrome-dgram')
 
 exports.browserify = function (filename, env, cb) {
   if (!env) env = {}
