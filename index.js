@@ -900,7 +900,9 @@ Socket.prototype._destroy = function (exception, cb) {
   if (self.id) {
     delete sockets[self.id]
     chrome.sockets.tcp.close(self.id, function () {
-      self.emit('close', !!exception)
+      if (self.destroyed) {
+        self.emit('close', !!exception)
+      }
     })
     self.id = null
   }
