@@ -1,4 +1,4 @@
-var net = require('../../')
+var net = require('net')
 var Buffer = require('buffer').Buffer
 
 var PORT = Number(process.env.PORT)

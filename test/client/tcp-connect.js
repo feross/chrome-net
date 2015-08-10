@@ -1,4 +1,4 @@
-var net = require('../../')
+var net = require('net')
 
 var PORT = Number(process.env.PORT)
 

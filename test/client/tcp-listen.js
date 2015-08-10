@@ -1,5 +1,5 @@
-var dgram = require('chrome-dgram')
-var net = require('../../')
+var dgram = require('dgram')
+var net = require('net')
 
 var LISTEN_PORT = Number(process.env.LISTEN_PORT)
 var READY_PORT = Number(process.env.READY_PORT)
