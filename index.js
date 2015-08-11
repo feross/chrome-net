@@ -134,7 +134,7 @@ function Server (/* [options], listener */) {
   if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
   EventEmitter.call(self)
 
-  var options // eslint-disable-line
+  var options
 
   if (is.isFunction(arguments[0])) {
     options = {}
@@ -569,6 +569,7 @@ function Socket (options) {
 
     // For incoming sockets (from server), it's already connected.
     self._connecting = true
+    self.writable = true
     self._onConnect()
   }
 }

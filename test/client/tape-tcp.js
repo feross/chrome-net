@@ -159,3 +159,17 @@ test('socket setTimeout', function (t) {
     })
   })
 })
+
+test('accepted socket', function (t) {
+  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  server.once('listening', function () {
+    var socket = net.connect(PORT0, '127.0.0.1')
+
+    server.on('connection', function (con) {
+      t.ok(con.writable, 'socket.writable is true')
+      socket.destroy()
+      server.close()
+      t.end()
+    })
+  })
+})
