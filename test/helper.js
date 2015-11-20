@@ -19,6 +19,7 @@ var BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
 
 builtins.net = require.resolve('../')
 builtins.dgram = require.resolve('chrome-dgram')
+builtins['function-bind'] = require.resolve('./function-bind.js')
 
 exports.browserify = function (filename, env, cb) {
   if (!env) env = {}
