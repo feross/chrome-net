@@ -10,7 +10,6 @@
     "John Hiesey <john@hiesey.com>"
   ],
   "dependencies": {
-    "core-util-is": "~1.0.1",
     "inherits": "^2.0.1"
   },
   "devDependencies": {

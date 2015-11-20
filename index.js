@@ -11,7 +11,6 @@
 
 var EventEmitter = require('events').EventEmitter
 var inherits = require('inherits')
-var is = require('core-util-is')
 var stream = require('stream')
 var deprecate = require('util').deprecate
 var timers = require('timers')
@@ -136,13 +135,13 @@ function Server (/* [options], listener */) {
 
   var options
 
-  if (is.isFunction(arguments[0])) {
+  if (typeof arguments[0] === 'function') {
     options = {}
     self.on('connection', arguments[0])
   } else {
     options = arguments[0] || {}
 
-    if (is.isFunction(arguments[1])) {
+    if (typeof arguments[1] === 'function') {
       self.on('connection', arguments[1])
     }
   }
@@ -196,7 +195,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
   var self = this
 
   var lastArg = arguments[arguments.length - 1]
-  if (is.isFunction(lastArg)) {
+  if (typeof lastArg === 'function') {
     self.once('listening', lastArg)
   }
 
@@ -208,13 +207,13 @@ Server.prototype.listen = function (/* variable arguments... */) {
   // When the ip is omitted it can be the second argument.
   var backlog = toNumber(arguments[1]) || toNumber(arguments[2]) || undefined
 
-  if (is.isObject(arguments[0])) {
+  if (arguments[0] !== null && typeof arguments[0] === 'object') {
     var h = arguments[0]
 
     if (h._handle || h.handle) {
       throw new Error('handle is not supported in Chrome Apps.')
     }
-    if (is.isNumber(h.fd) && h.fd >= 0) {
+    if (typeof h.fd === 'number' && h.fd >= 0) {
       throw new Error('fd is not supported in Chrome Apps.')
     }
 
@@ -223,7 +222,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
       backlog = h.backlog
     }
 
-    if (is.isNumber(h.port)) {
+    if (typeof h.port === 'number') {
       address = h.host || null
       port = h.port
     } else if (h.path && isPipeName(h.path)) {
@@ -234,9 +233,9 @@ Server.prototype.listen = function (/* variable arguments... */) {
   } else if (isPipeName(arguments[0])) {
     // UNIX socket or Windows pipe.
     throw new Error('Pipes are not supported in Chrome Apps.')
-  } else if (is.isUndefined(arguments[1]) ||
-             is.isFunction(arguments[1]) ||
-             is.isNumber(arguments[1])) {
+  } else if (arguments[1] === undefined ||
+             typeof arguments[1] === 'function' ||
+             typeof arguments[1] === 'number') {
     // The first argument is the port, no IP given.
     address = null
   } else {
@@ -263,7 +262,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
     self._host = '::'
   }
 
-  self._backlog = is.isNumber(backlog) ? backlog : undefined
+  self._backlog = typeof backlog === 'number' ? backlog : undefined
 
   self._connecting = true
 
@@ -519,15 +518,15 @@ function Socket (options) {
   var self = this
   if (!(self instanceof Socket)) return new Socket(options)
 
-  if (is.isNumber(options)) {
+  if (typeof options === 'number') {
     options = { fd: options } // Legacy interface.
-  } else if (is.isUndefined(options)) {
+  } else if (options === undefined) {
     options = {}
   }
 
   if (options.handle) {
     throw new Error('handle is not supported in Chrome Apps.')
-  } else if (!is.isUndefined(options.fd)) {
+  } else if (options.fd !== undefined) {
     throw new Error('fd is not supported in Chrome Apps.')
   }
 
@@ -661,7 +660,7 @@ Socket.prototype.connect = function () {
 
   self._unrefTimer()
 
-  if (is.isFunction(cb)) {
+  if (typeof cb === 'function') {
     self.once('connect', cb)
   }
 
@@ -976,7 +975,7 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
   var self = this
   if (self.id) {
     // backwards compatibility: assume true when `enable` is omitted
-    noDelay = is.isUndefined(noDelay) ? true : !!noDelay
+    noDelay = noDelay === undefined ? true : !!noDelay
     chrome.sockets.tcp.setNoDelay(self.id, noDelay, chromeCallbackWrap(callback))
   }
 }
@@ -1071,7 +1070,7 @@ exports.isIP = function (ip) {
 function normalizeConnectArgs (args) {
   var options = {}
 
-  if (is.isObject(args[0])) {
+  if (args[0] !== null && typeof args[0] === 'object') {
     // connect(options, [cb])
     options = args[0]
   } else if (isPipeName(args[0])) {
@@ -1080,13 +1079,13 @@ function normalizeConnectArgs (args) {
   } else {
     // connect(port, [host], [cb])
     options.port = args[0]
-    if (is.isString(args[1])) {
+    if (typeof args[1] === 'string') {
       options.host = args[1]
     }
   }
 
   var cb = args[args.length - 1]
-  return is.isFunction(cb) ? [options, cb] : [options]
+  return typeof cb === 'function' ? [options, cb] : [options]
 }
 
 function toNumber (x) {
@@ -1094,7 +1093,7 @@ function toNumber (x) {
 }
 
 function isPipeName (s) {
-  return is.isString(s) && toNumber(s) === false
+  return typeof s === 'string' && toNumber(s) === false
 }
 
  // This prevents "Unchecked runtime.lastError" errors
