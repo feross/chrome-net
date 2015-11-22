@@ -1,4 +1,4 @@
-# chrome-net
+# cordova-chrome-net
 
 ### Use the Node `net` API in cordova Apps with the chrome-socket plugins
 
@@ -11,7 +11,7 @@ This module is used by [cordova-bitcore](https://github.com/theveloped/cordova-b
 ## install
 
 ```
-npm install chrome-net
+npm install cordova-chrome-net
 ```
 
 ## methods
