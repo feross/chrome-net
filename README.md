@@ -21,7 +21,7 @@ Use node's `net` API, including all parameter list shorthands and variations.
 Example TCP client:
 
 ```js
-var net = require('chrome-net')
+var net = require('cordova-chrome-net')
 
 var client = net.createConnection({
   port: 1337,
@@ -41,7 +41,7 @@ client.on('data', function (data) {
 Example TCP server:
 
 ```js
-var net = require('chrome-net')
+var net = require('cordova-chrome-net')
 
 var server = net.createServer()
 
