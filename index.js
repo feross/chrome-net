@@ -269,14 +269,14 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
   chrome.sockets.tcpServer.create(function (createInfo) {
     if (!self._connecting || self.id) {
-      ignoreLastError()
+      // ignoreLastError()
       chrome.sockets.tcpServer.close(createInfo.socketId)
       return
     }
-    if (chrome.runtime.lastError) {
-      self.emit('error', new Error(chrome.runtime.lastError.message))
-      return
-    }
+    // if (chrome.runtime.lastError) {
+    //   self.emit('error', new Error(chrome.runtime.lastError.message))
+    //   return
+    // }
 
     var socketId = self.id = createInfo.socketId
     servers[self.id] = self
@@ -286,11 +286,11 @@ Server.prototype.listen = function (/* variable arguments... */) {
           self._backlog, function (result) {
         // callback may be after close
         if (self.id !== socketId) {
-          ignoreLastError()
+          // ignoreLastError()
           return
         }
         if (result !== 0 && isAny6) {
-          ignoreLastError()
+          // ignoreLastError()
           self._host = '0.0.0.0' // try IPv4
           isAny6 = false
           return listen()
@@ -313,13 +313,13 @@ Server.prototype._onListen = function (result) {
     var idBefore = self.id
     chrome.sockets.tcpServer.getInfo(self.id, function (info) {
       if (self.id !== idBefore) {
-        ignoreLastError()
+        // ignoreLastError()
         return
       }
-      if (chrome.runtime.lastError) {
-        self._onListen(-2) // net::ERR_FAILED
-        return
-      }
+      // if (chrome.runtime.lastError) {
+      //   self._onListen(-2) // net::ERR_FAILED
+      //   return
+      // }
 
       self._address = {
         port: info.localPort,
@@ -667,14 +667,14 @@ Socket.prototype.connect = function () {
 
   chrome.sockets.tcp.create(function (createInfo) {
     if (!self._connecting || self.id) {
-      ignoreLastError()
+      // ignoreLastError()
       chrome.sockets.tcp.close(createInfo.socketId)
       return
     }
-    if (chrome.runtime.lastError) {
-      self.destroy(new Error(chrome.runtime.lastError.message))
-      return
-    }
+    // if (chrome.runtime.lastError) {
+    //   self.destroy(new Error(chrome.runtime.lastError.message))
+    //   return
+    // }
 
     self.id = createInfo.socketId
     sockets[self.id] = self
@@ -684,7 +684,7 @@ Socket.prototype.connect = function () {
     chrome.sockets.tcp.connect(self.id, self._host, self._port, function (result) {
       // callback may come after call to destroy
       if (self.id !== createInfo.socketId) {
-        ignoreLastError()
+        // ignoreLastError()
         return
       }
       if (result !== 0) {
@@ -706,13 +706,13 @@ Socket.prototype._onConnect = function () {
   var idBefore = self.id
   chrome.sockets.tcp.getInfo(self.id, function (result) {
     if (self.id !== idBefore) {
-      ignoreLastError()
+      // ignoreLastError()
       return
     }
-    if (chrome.runtime.lastError) {
-      self.destroy(new Error(chrome.runtime.lastError.message))
-      return
-    }
+    // if (chrome.runtime.lastError) {
+    //   self.destroy(new Error(chrome.runtime.lastError.message))
+    //   return
+    // }
 
     self.remoteAddress = result.peerAddress
     self.remoteFamily = result.peerAddress &&
@@ -780,7 +780,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
   var idBefore = self.id
   chrome.sockets.tcp.send(self.id, buffer, function (sendInfo) {
     if (self.id !== idBefore) {
-      ignoreLastError()
+      // ignoreLastError()
       return
     }
 
@@ -807,10 +807,13 @@ Socket.prototype._read = function (bufferSize) {
   var idBefore = self.id
   chrome.sockets.tcp.getInfo(self.id, function (result) {
     if (self.id !== idBefore) {
-      ignoreLastError()
+      // ignoreLastError()
       return
     }
-    if (chrome.runtime.lastError || !result.connected) {
+    // if (chrome.runtime.lastError || !result.connected) {
+    //   self._onReceiveError(-15) // workaround for https://crbug.com/518161
+    // }
+    if (!result.connected) {
       self._onReceiveError(-15) // workaround for https://crbug.com/518161
     }
   })
@@ -1098,17 +1101,17 @@ function isPipeName (s) {
 }
 
  // This prevents "Unchecked runtime.lastError" errors
-function ignoreLastError () {
-  chrome.runtime.lastError // call the getter function
-}
+// function ignoreLastError () {
+//   chrome.runtime.lastError // call the getter function
+// }
 
 function chromeCallbackWrap (callback) {
   return function () {
     var error
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError.message)
-      error = new Error(chrome.runtime.lastError.message)
-    }
+    // if (chrome.runtime.lastError) {
+    //   console.error(chrome.runtime.lastError.message)
+    //   error = new Error(chrome.runtime.lastError.message)
+    // }
     if (callback) callback(error)
   }
 }
@@ -1143,9 +1146,9 @@ var errorChromeToUv = {
 function errnoException (err, syscall) {
   var uvCode = errorChromeToUv[err] || 'UNKNOWN'
   var message = syscall + ' ' + err
-  if (chrome.runtime.lastError) {
-    message += ' ' + chrome.runtime.lastError.message
-  }
+  // if (chrome.runtime.lastError) {
+  //   message += ' ' + chrome.runtime.lastError.message
+  // }
   message += ' (mapped uv code: ' + uvCode + ')'
   var e = new Error(message)
   e.code = e.errno = uvCode
