@@ -1,12 +1,12 @@
-# chrome-net [![npm](https://img.shields.io/npm/v/chrome-net.svg)](https://npmjs.org/package/chrome-net) [![downloads](https://img.shields.io/npm/dm/chrome-net.svg)](https://npmjs.org/package/chrome-net)
+# chrome-net
 
-### Use the Node `net` API in Chrome Apps
+### Use the Node `net` API in cordova Apps with the chrome-socket plugins
 
-This module lets you use the Node.js [net](http://nodejs.org/api/net.html) (TCP) API in [Chrome Packaged Apps](http://developer.chrome.com/apps/about_apps.html).
+This module lets you use the Node.js [net](http://nodejs.org/api/net.html) (TCP) API in cordova/ionic mobile apps using `cordova-plugin-chrome-apps-sockets-tcp` and `cordova-plugin-chrome-apps-sockets-tcpserver` plugins for cordova.
 
 Instead of learning the quirks of Chrome's `chrome.sockets` API for networking in Chrome Apps just **use the higher-level node API you're familiar with**. Then, compile your code with [browserify](https://github.com/substack/node-browserify) and you're all set!
 
-This module is used by [webtorrent](https://github.com/feross/webtorrent).
+This module is used by [cordova-bitcore](https://github.com/theveloped/cordova-bitcore.git).
 
 ## install
 
@@ -61,10 +61,6 @@ server.listen(1337)
 ```
 
 See nodejs.org for full API documentation: [net](http://nodejs.org/api/net.html)
-
-## contribute
-
-To run tests, use `npm test`. The tests will run TCP and UDP servers and launch a few different Chrome Packaged Apps with browserified client code. The tests currently require Chrome Canary on Mac. If you're on Windows or Linux, feel free to send a pull request to fix this limitation.
 
 ## license
 
