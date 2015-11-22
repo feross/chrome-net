@@ -64,4 +64,4 @@ See nodejs.org for full API documentation: [net](http://nodejs.org/api/net.html)
 
 ## license
 
-MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org) & John Hiesey.
+MIT. Copyright (c) Tobias Scheepers, Feross Aboukhadijeh and John Hiesey.
