@@ -20,13 +20,14 @@ var timers = require('timers')
 // to the right handlers.
 var servers = {}
 var sockets = {}
+var listenersAdded = false
 
-if (typeof chrome !== 'undefined') {
-  chrome.sockets.tcpServer.onAccept.addListener(onAccept)
-  chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
-  chrome.sockets.tcp.onReceive.addListener(onReceive)
-  chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
-}
+// if (typeof chrome !== 'undefined') {
+//   chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+//   chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+//   chrome.sockets.tcp.onReceive.addListener(onReceive)
+//   chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+// }
 
 function onAccept (info) {
   if (info.socketId in servers) {
@@ -133,6 +134,16 @@ function Server (/* [options], listener */) {
   var self = this
   if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
   EventEmitter.call(self)
+  
+  if (!listenersAdded) {
+    if (typeof chrome !== 'undefined') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
 
   var options
 
@@ -518,6 +529,16 @@ inherits(Socket, stream.Duplex)
 function Socket (options) {
   var self = this
   if (!(self instanceof Socket)) return new Socket(options)
+
+  if (!listenersAdded) {
+    if (typeof chrome !== 'undefined') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
 
   if (is.isNumber(options)) {
     options = { fd: options } // Legacy interface.
