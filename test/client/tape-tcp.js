@@ -12,7 +12,7 @@ test('TCP listen', function (t) {
   }, /Pipes are not supported/, 'throws when trying to use named pipes')
   t.throws(function () {
     net.createServer().listen(65536)
-  }, /port should be >= 0 and < 65536/, 'throws when using invalid port 65536')
+  }, /"port" option should be >= 0 and < 65536/, 'throws when using invalid port 65536')
   t.end()
 })
 
@@ -22,12 +22,12 @@ test('TCP connect', function (t) {
   }, /Pipes are not supported/, 'throws when trying to use named pipes')
   t.throws(function () {
     net.connect(65536)
-  }, /port should be >= 0 and < 65536/, 'throws when using invalid port 65536')
+  }, /"port" option should be >= 0 and < 65536/, 'throws when using invalid port 65536')
   t.end()
 })
 
 function isPaused (socket) {
-  return !socket._readableState.flowing // TODO: replace with isPaused after https://github.com/substack/node-browserify/issues/1341
+  return socket.isPaused()
 }
 
 test('Pause on connect', function (t) {

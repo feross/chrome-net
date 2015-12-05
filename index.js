@@ -1,4 +1,5 @@
 /*global chrome */
+'use strict'
 
 /**
  * net
@@ -9,7 +10,7 @@
  * You can include this module with require('chrome-net')
  */
 
-var EventEmitter = require('events').EventEmitter
+var EventEmitter = require('events')
 var inherits = require('inherits')
 var stream = require('stream')
 var deprecate = require('util').deprecate
@@ -65,11 +66,11 @@ function onReceiveError (info) {
  * set as a listener for the 'connection' event.
  *
  * @param  {Object} options
- * @param  {function} listener
+ * @param  {function} connectionListener
  * @return {Server}
  */
-exports.createServer = function (options, listener) {
-  return new Server(options, listener)
+exports.createServer = function (options, connectionListener) {
+  return new Server(options, connectionListener)
 }
 
 /**
@@ -128,21 +129,20 @@ inherits(Server, EventEmitter)
  *   Emitted when an error occurs. The 'close' event will be called directly
  *   following this event. See example in discussion of server.listen.
  */
-function Server (/* [options], listener */) {
+function Server (options, connectionListener) {
   var self = this
-  if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
+  if (!(self instanceof Server)) return new Server(options, connectionListener)
   EventEmitter.call(self)
 
-  var options
-
-  if (typeof arguments[0] === 'function') {
+  if (typeof options === 'function') {
+    connectionListener = options
     options = {}
-    self.on('connection', arguments[0])
+    self.on('connection', connectionListener)
   } else {
-    options = arguments[0] || {}
+    options = options || {}
 
-    if (typeof arguments[1] === 'function') {
-      self.on('connection', arguments[1])
+    if (typeof connectionListener === 'function') {
+      self.on('connection', connectionListener)
     }
   }
 
@@ -151,10 +151,11 @@ function Server (/* [options], listener */) {
   Object.defineProperty(self, 'connections', {
     get: deprecate(function () {
       return self._connections
-    }, 'connections property is deprecated. Use getConnections() method'),
+    }, 'Server.connections property is deprecated. ' +
+       'Use Server.getConnections method instead.'),
     set: deprecate(function (val) {
       return (self._connections = val)
-    }, 'connections property is deprecated. Use getConnections() method'),
+    }, 'Server.connections property is deprecated.'),
     configurable: true, enumerable: false
   })
 
@@ -222,7 +223,10 @@ Server.prototype.listen = function (/* variable arguments... */) {
       backlog = h.backlog
     }
 
-    if (typeof h.port === 'number') {
+    if (typeof h.port === 'number' || typeof h.port === 'string' ||
+          (typeof h.port === 'undefined' && 'port' in h)) {
+      // Undefined is interpreted as zero (random port) for consistency
+      // with net.connect().
       address = h.host || null
       port = h.port
     } else if (h.path && isPipeName(h.path)) {
@@ -250,10 +254,10 @@ Server.prototype.listen = function (/* variable arguments... */) {
   }
 
   // If port is invalid or undefined, bind to a random port.
-  self._port = port | 0
-  if (self._port < 0 || self._port > 65535) { // allow 0 for random port
-    throw new RangeError('port should be >= 0 and < 65536: ' + self._port)
+  if (typeof port !== 'undefined' && !isLegalPort(port)) {
+    throw new RangeError('"port" option should be >= 0 and < 65536: ' + port)
   }
+  self._port = port | 0
 
   self._host = address
 
@@ -283,20 +287,20 @@ Server.prototype.listen = function (/* variable arguments... */) {
     function listen () {
       chrome.sockets.tcpServer.listen(self.id, self._host, self._port,
           self._backlog, function (result) {
-        // callback may be after close
-        if (self.id !== socketId) {
-          ignoreLastError()
-          return
-        }
-        if (result !== 0 && isAny6) {
-          ignoreLastError()
-          self._host = '0.0.0.0' // try IPv4
-          isAny6 = false
-          return listen()
-        }
+            // callback may be after close
+            if (self.id !== socketId) {
+              ignoreLastError()
+              return
+            }
+            if (result !== 0 && isAny6) {
+              ignoreLastError()
+              self._host = '0.0.0.0' // try IPv4
+              isAny6 = false
+              return listen()
+            }
 
-        self._onListen(result)
-      })
+            self._onListen(result)
+          })
     }
     listen()
   })
@@ -329,7 +333,7 @@ Server.prototype._onListen = function (result) {
       self.emit('listening')
     })
   } else {
-    self.emit('error', errnoException(result, 'listen'))
+    self.emit('error', exceptionWithHostPort(result, 'listen', self._host, self._port))
     chrome.sockets.tcpServer.close(self.id)
     delete servers[self.id]
     self.id = null
@@ -376,7 +380,7 @@ Server.prototype._onAcceptError = function (resultCode) {
 Server.prototype.close = function (callback) {
   var self = this
 
-  if (callback) {
+  if (typeof callback === 'function') {
     if (!self.id) {
       self.once('close', function () {
         callback(new Error('Not running'))
@@ -406,12 +410,14 @@ Server.prototype._emitCloseIfDrained = function () {
     return
   }
 
-  process.nextTick(function () {
-    if (self.id || self._connecting || self._connections) {
-      return
-    }
-    self.emit('close')
-  })
+  process.nextTick(emitCloseNT, self)
+}
+
+function emitCloseNT (self) {
+  if (self.id || self._connecting || self._connections) {
+    return
+  }
+  self.emit('close')
 }
 
 /**
@@ -425,12 +431,10 @@ Server.prototype.address = function () {
   return this._address
 }
 
-Server.prototype.unref = function () {
-  // No chrome.socket equivalent
-}
-
+Server.prototype.unref =
 Server.prototype.ref = function () {
   // No chrome.socket equivalent
+  return this
 }
 
 /**
@@ -443,9 +447,7 @@ Server.prototype.ref = function () {
  */
 Server.prototype.getConnections = function (callback) {
   var self = this
-  process.nextTick(function () {
-    callback(null, self._connections)
-  })
+  process.nextTick(callback, null, self._connections)
 }
 
 inherits(Socket, stream.Duplex)
@@ -650,11 +652,17 @@ Socket.prototype.connect = function () {
   self.writable = true
 
   self._host = options.host || 'localhost'
-  self._port = Number(options.port)
+  self._port = options.port
 
-  if (self._port < 0 || self._port > 65535 || isNaN(self._port)) {
-    throw new RangeError('port should be >= 0 and < 65536: ' + options.port)
+  if (typeof self._port !== 'undefined') {
+    if (typeof self._port !== 'number' && typeof self._port !== 'string') {
+      throw new TypeError('"port" option should be a number or string: ' + self._port)
+    }
+    if (!isLegalPort(self._port)) {
+      throw new RangeError('"port" option should be >= 0 and < 65536: ' + self._port)
+    }
   }
+  self._port |= 0
 
   self._init()
 
@@ -687,7 +695,7 @@ Socket.prototype.connect = function () {
         return
       }
       if (result !== 0) {
-        self.destroy(errnoException(result, 'connect'))
+        self.destroy(exceptionWithHostPort(result, 'connect', self._host, self._port))
         return
       }
 
@@ -726,8 +734,7 @@ Socket.prototype._onConnect = function () {
     self.emit('connect')
     // start the first read, or get an immediate EOF.
     // this doesn't actually consume any bytes, because len=0
-    // TODO: replace _readableState.flowing with isPaused() after https://github.com/substack/node-browserify/issues/1341
-    if (self._readableState.flowing) self.read(0)
+    if (!self.isPaused()) self.read(0)
   })
 }
 
@@ -766,7 +773,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
   self._pendingData = null
 
   if (!this.id) {
-    callback(new Error('This socket is closed.'))
+    callback(new Error('This socket is closed'))
     return
   }
 
@@ -784,7 +791,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
     }
 
     if (sendInfo.resultCode < 0) {
-      self.destroy(errnoException(sendInfo.resultCode, 'write'), callback)
+      self.destroy(exceptionWithHostPort(sendInfo.resultCode, 'write', self.remoteAddress, self.remotePort), callback)
     } else {
       self._unrefTimer()
       callback(null)
@@ -869,9 +876,7 @@ Socket.prototype._destroy = function (exception, cb) {
   function fireErrorCallbacks () {
     if (cb) cb(exception)
     if (exception && !self._writableState.errorEmitted) {
-      process.nextTick(function () {
-        self.emit('error', exception)
-      })
+      process.nextTick(emitErrorNT, self, exception)
       self._writableState.errorEmitted = true
     }
   }
@@ -946,6 +951,8 @@ Socket.prototype.setTimeout = function (timeout, callback) {
       self.once('timeout', callback)
     }
   }
+
+  return self
 }
 
 Socket.prototype._onTimeout = function () {
@@ -973,11 +980,16 @@ Socket.prototype._unrefTimer = function unrefTimer () {
  */
 Socket.prototype.setNoDelay = function (noDelay, callback) {
   var self = this
-  if (self.id) {
-    // backwards compatibility: assume true when `enable` is omitted
-    noDelay = noDelay === undefined ? true : !!noDelay
-    chrome.sockets.tcp.setNoDelay(self.id, noDelay, chromeCallbackWrap(callback))
+  if (!self.id) {
+    self.once('connect', self.setNoDelay.bind(self, noDelay, callback))
+    return self
   }
+
+  // backwards compatibility: assume true when `noDelay` is omitted
+  noDelay = noDelay === undefined ? true : !!noDelay
+  chrome.sockets.tcp.setNoDelay(self.id, noDelay, chromeCallbackWrap(callback))
+
+  return self
 }
 
 /**
@@ -1000,10 +1012,15 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
  */
 Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
   var self = this
-  if (self.id) {
-    chrome.sockets.tcp.setKeepAlive(self.id, !!enable, ~~(initialDelay / 1000),
-        chromeCallbackWrap(callback))
+  if (!self.id) {
+    self.once('connect', self.setKeepAlive.bind(self, enable, initialDelay, callback))
+    return self
   }
+
+  chrome.sockets.tcp.setKeepAlive(self.id, !!enable, ~~(initialDelay / 1000),
+      chromeCallbackWrap(callback))
+
+  return self
 }
 
 /**
@@ -1036,12 +1053,10 @@ Object.defineProperty(Socket.prototype, 'readyState', {
   }
 })
 
-Socket.prototype.unref = function () {
-  // No chrome.socket equivalent
-}
-
+Socket.prototype.unref =
 Socket.prototype.ref = function () {
   // No chrome.socket equivalent
+  return this
 }
 
 //
@@ -1096,6 +1111,13 @@ function isPipeName (s) {
   return typeof s === 'string' && toNumber(s) === false
 }
 
+// Check that the port number is not NaN when coerced to a number,
+// is an integer and that it falls within the legal range of port numbers.
+function isLegalPort (port) {
+  if (typeof port === 'string' && port.trim() === '') return false
+  return +port === (port >>> 0) && port >= 0 && port <= 0xFFFF
+}
+
  // This prevents "Unchecked runtime.lastError" errors
 function ignoreLastError () {
   chrome.runtime.lastError // call the getter function
@@ -1110,6 +1132,10 @@ function chromeCallbackWrap (callback) {
     }
     if (callback) callback(error)
   }
+}
+
+function emitErrorNT (self, err) {
+  self.emit('error', err)
 }
 
 // Full list of possible error codes: https://code.google.com/p/chrome-browser/source/browse/trunk/src/net/base/net_error_list.h
@@ -1151,4 +1177,23 @@ function errnoException (err, syscall) {
   // TODO: expose chrome error code; what property name?
   e.syscall = syscall
   return e
+}
+
+function exceptionWithHostPort (err, syscall, address, port, additional) {
+  var details
+  if (port && port > 0) {
+    details = address + ':' + port
+  } else {
+    details = address
+  }
+
+  if (additional) {
+    details += ' - Local (' + additional + ')'
+  }
+  var ex = errnoException(err, syscall, details)
+  ex.address = address
+  if (port) {
+    ex.port = port
+  }
+  return ex
 }
