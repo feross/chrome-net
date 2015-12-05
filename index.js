@@ -130,45 +130,42 @@ inherits(Server, EventEmitter)
  *   following this event. See example in discussion of server.listen.
  */
 function Server (options, connectionListener) {
-  var self = this
-  if (!(self instanceof Server)) return new Server(options, connectionListener)
-  EventEmitter.call(self)
+  if (!(this instanceof Server)) return new Server(options, connectionListener)
+  EventEmitter.call(this)
 
   if (typeof options === 'function') {
     connectionListener = options
     options = {}
-    self.on('connection', connectionListener)
+    this.on('connection', connectionListener)
   } else {
     options = options || {}
 
     if (typeof connectionListener === 'function') {
-      self.on('connection', connectionListener)
+      this.on('connection', connectionListener)
     }
   }
 
-  self._connections = 0
+  this._connections = 0
 
-  Object.defineProperty(self, 'connections', {
-    get: deprecate(function () {
-      return self._connections
-    }, 'Server.connections property is deprecated. ' +
-       'Use Server.getConnections method instead.'),
-    set: deprecate(function (val) {
-      return (self._connections = val)
-    }, 'Server.connections property is deprecated.'),
+  Object.defineProperty(this, 'connections', {
+    get: deprecate(() => this._connections,
+      'Server.connections property is deprecated. ' +
+      'Use Server.getConnections method instead.'),
+    set: deprecate(val => (this._connections = val),
+      'Server.connections property is deprecated.'),
     configurable: true, enumerable: false
   })
 
-  self.id = null // a number > 0
-  self._connecting = false
+  this.id = null // a number > 0
+  this._connecting = false
 
-  self.allowHalfOpen = options.allowHalfOpen || false
-  self.pauseOnConnect = !!options.pauseOnConnect
-  self._address = null
+  this.allowHalfOpen = options.allowHalfOpen || false
+  this.pauseOnConnect = !!options.pauseOnConnect
+  this._address = null
 
-  self._host = null
-  self._port = null
-  self._backlog = null
+  this._host = null
+  this._port = null
+  this._backlog = null
 }
 exports.Server = Server
 
@@ -193,11 +190,9 @@ Server.prototype._usingSlaves = false // not used
  * @return {Socket}
  */
 Server.prototype.listen = function (/* variable arguments... */) {
-  var self = this
-
   var lastArg = arguments[arguments.length - 1]
   if (typeof lastArg === 'function') {
-    self.once('listening', lastArg)
+    this.once('listening', lastArg)
   }
 
   var port = toNumber(arguments[0])
@@ -249,125 +244,118 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
   // now do something with port, address, backlog
 
-  if (self.id) {
-    self.close()
+  if (this.id) {
+    this.close()
   }
 
   // If port is invalid or undefined, bind to a random port.
   if (typeof port !== 'undefined' && !isLegalPort(port)) {
     throw new RangeError('"port" option should be >= 0 and < 65536: ' + port)
   }
-  self._port = port | 0
+  this._port = port | 0
 
-  self._host = address
+  this._host = address
 
-  var isAny6 = !self._host
+  var isAny6 = !this._host
   if (isAny6) {
-    self._host = '::'
+    this._host = '::'
   }
 
-  self._backlog = typeof backlog === 'number' ? backlog : undefined
+  this._backlog = typeof backlog === 'number' ? backlog : undefined
 
-  self._connecting = true
+  this._connecting = true
 
-  chrome.sockets.tcpServer.create(function (createInfo) {
-    if (!self._connecting || self.id) {
+  chrome.sockets.tcpServer.create(createInfo => {
+    if (!this._connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcpServer.close(createInfo.socketId)
       return
     }
     if (chrome.runtime.lastError) {
-      self.emit('error', new Error(chrome.runtime.lastError.message))
+      this.emit('error', new Error(chrome.runtime.lastError.message))
       return
     }
 
-    var socketId = self.id = createInfo.socketId
-    servers[self.id] = self
+    var socketId = this.id = createInfo.socketId
+    servers[this.id] = this
 
-    function listen () {
-      chrome.sockets.tcpServer.listen(self.id, self._host, self._port,
-          self._backlog, function (result) {
-            // callback may be after close
-            if (self.id !== socketId) {
-              ignoreLastError()
-              return
-            }
-            if (result !== 0 && isAny6) {
-              ignoreLastError()
-              self._host = '0.0.0.0' // try IPv4
-              isAny6 = false
-              return listen()
-            }
+    var listen = () => chrome.sockets.tcpServer.listen(this.id, this._host,
+        this._port, this._backlog,
+        result => {
+          // callback may be after close
+          if (this.id !== socketId) {
+            ignoreLastError()
+            return
+          }
+          if (result !== 0 && isAny6) {
+            ignoreLastError()
+            this._host = '0.0.0.0' // try IPv4
+            isAny6 = false
+            return listen()
+          }
 
-            self._onListen(result)
-          })
-    }
+          this._onListen(result)
+        })
     listen()
   })
 
-  return self
+  return this
 }
 
 Server.prototype._onListen = function (result) {
-  var self = this
-  self._connecting = false
+  this._connecting = false
 
   if (result === 0) {
-    var idBefore = self.id
-    chrome.sockets.tcpServer.getInfo(self.id, function (info) {
-      if (self.id !== idBefore) {
+    var idBefore = this.id
+    chrome.sockets.tcpServer.getInfo(this.id, info => {
+      if (this.id !== idBefore) {
         ignoreLastError()
         return
       }
       if (chrome.runtime.lastError) {
-        self._onListen(-2) // net::ERR_FAILED
+        this._onListen(-2) // net::ERR_FAILED
         return
       }
 
-      self._address = {
+      this._address = {
         port: info.localPort,
         family: info.localAddress &&
           info.localAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4',
         address: info.localAddress
       }
-      self.emit('listening')
+      this.emit('listening')
     })
   } else {
-    self.emit('error', exceptionWithHostPort(result, 'listen', self._host, self._port))
-    chrome.sockets.tcpServer.close(self.id)
-    delete servers[self.id]
-    self.id = null
+    this.emit('error', exceptionWithHostPort(result, 'listen', this._host, this._port))
+    chrome.sockets.tcpServer.close(this.id)
+    delete servers[this.id]
+    this.id = null
   }
 }
 
 Server.prototype._onAccept = function (clientSocketId) {
-  var self = this
-
   // Set the `maxConnections` property to reject connections when the server's
   // connection count gets high.
-  if (self.maxConnections && self._connections >= self.maxConnections) {
+  if (this.maxConnections && this._connections >= this.maxConnections) {
     chrome.sockets.tcp.close(clientSocketId)
     console.warn('Rejected connection - hit `maxConnections` limit')
     return
   }
 
-  self._connections += 1
+  this._connections += 1
 
   var acceptedSocket = new Socket({
-    server: self,
+    server: this,
     id: clientSocketId,
-    allowHalfOpen: self.allowHalfOpen,
-    pauseOnCreate: self.pauseOnConnect
+    allowHalfOpen: this.allowHalfOpen,
+    pauseOnCreate: this.pauseOnConnect
   })
-  acceptedSocket.on('connect', function () {
-    self.emit('connection', acceptedSocket)
-  })
+  acceptedSocket.on('connect', () => this.emit('connection', acceptedSocket))
 }
 
 Server.prototype._onAcceptError = function (resultCode) {
-  var self = this
-  self.emit('error', errnoException(resultCode, 'accept'))
-  self.close()
+  this.emit('error', errnoException(resultCode, 'accept'))
+  this.close()
 }
 
 /**
@@ -378,39 +366,33 @@ Server.prototype._onAcceptError = function (resultCode) {
  * @param  {function} callback
  */
 Server.prototype.close = function (callback) {
-  var self = this
-
   if (typeof callback === 'function') {
-    if (!self.id) {
-      self.once('close', function () {
-        callback(new Error('Not running'))
-      })
+    if (!this.id) {
+      this.once('close', () => callback(new Error('Not running')))
     } else {
-      self.once('close', callback)
+      this.once('close', callback)
     }
   }
 
-  if (self.id) {
-    chrome.sockets.tcpServer.close(self.id)
-    delete servers[self.id]
-    self.id = null
+  if (this.id) {
+    chrome.sockets.tcpServer.close(this.id)
+    delete servers[this.id]
+    this.id = null
   }
-  self._address = null
-  self._connecting = false
+  this._address = null
+  this._connecting = false
 
-  self._emitCloseIfDrained()
+  this._emitCloseIfDrained()
 
-  return self
+  return this
 }
 
 Server.prototype._emitCloseIfDrained = function () {
-  var self = this
-
-  if (self.id || self._connecting || self._connections) {
+  if (this.id || this._connecting || this._connections) {
     return
   }
 
-  process.nextTick(emitCloseNT, self)
+  process.nextTick(emitCloseNT, this)
 }
 
 function emitCloseNT (self) {
@@ -446,8 +428,7 @@ Server.prototype.ref = function () {
  * @param  {function} callback
  */
 Server.prototype.getConnections = function (callback) {
-  var self = this
-  process.nextTick(callback, null, self._connections)
+  process.nextTick(callback, null, this._connections)
 }
 
 inherits(Socket, stream.Duplex)
@@ -517,8 +498,7 @@ inherits(Socket, stream.Duplex)
  *   boolean which says if the socket was closed due to a transmission error.
  */
 function Socket (options) {
-  var self = this
-  if (!(self instanceof Socket)) return new Socket(options)
+  if (!(this instanceof Socket)) return new Socket(options)
 
   if (typeof options === 'number') {
     options = { fd: options } // Legacy interface.
@@ -534,67 +514,63 @@ function Socket (options) {
 
   options.decodeStrings = true
   options.objectMode = false
-  stream.Duplex.call(self, options)
+  stream.Duplex.call(this, options)
 
-  self.destroyed = false
-  self._hadError = false // Used by _http_client.js
-  self.id = null // a number > 0
-  self._parent = null
-  self._host = null
-  self._port = null
-  self._pendingData = null
+  this.destroyed = false
+  this._hadError = false // Used by _http_client.js
+  this.id = null // a number > 0
+  this._parent = null
+  this._host = null
+  this._port = null
+  this._pendingData = null
 
-  self.ondata = null
-  self.onend = null
+  this.ondata = null
+  this.onend = null
 
-  self._init()
-  self._reset()
+  this._init()
+  this._reset()
 
   // default to *not* allowing half open sockets
   // Note: this is not possible in Chrome Apps, see https://crbug.com/124952
-  self.allowHalfOpen = options.allowHalfOpen || false
+  this.allowHalfOpen = options.allowHalfOpen || false
 
   // shut down the socket when we're finished with it.
-  self.on('finish', self.destroy)
+  this.on('finish', this.destroy)
 
   if (options.server) {
-    self.server = options.server
-    self.id = options.id
-    sockets[self.id] = self
+    this.server = options.server
+    this.id = options.id
+    sockets[this.id] = this
 
     if (options.pauseOnCreate) {
       // stop the handle from reading and pause the stream
       // (Already paused in Chrome version)
-      self._readableState.flowing = false
+      this._readableState.flowing = false
     }
 
     // For incoming sockets (from server), it's already connected.
-    self._connecting = true
-    self.writable = true
-    self._onConnect()
+    this._connecting = true
+    this.writable = true
+    this._onConnect()
   }
 }
 exports.Socket = Socket
 
 // called when creating new Socket, or when re-using a closed Socket
 Socket.prototype._init = function () {
-  var self = this
-
   // The amount of received bytes.
-  self.bytesRead = 0
+  this.bytesRead = 0
 
-  self._bytesDispatched = 0
+  this._bytesDispatched = 0
 }
 
 // called when creating new Socket, or when closing a Socket
 Socket.prototype._reset = function () {
-  var self = this
-
-  self.remoteAddress = self.remotePort =
-      self.localAddress = self.localPort = null
-  self.remoteFamily = 'IPv4'
-  self.readable = self.writable = false
-  self._connecting = false
+  this.remoteAddress = this.remotePort =
+      this.localAddress = this.localPort = null
+  this.remoteFamily = 'IPv4'
+  this.readable = this.writable = false
+  this._connecting = false
 }
 
 /**
@@ -622,7 +598,6 @@ Socket.prototype._reset = function () {
  * @return {Socket}   this socket (for chaining)
  */
 Socket.prototype.connect = function () {
-  var self = this
   var args = normalizeConnectArgs(arguments)
   var options = args[0]
   var cb = args[1]
@@ -631,110 +606,108 @@ Socket.prototype.connect = function () {
     throw new Error('Pipes are not supported in Chrome Apps.')
   }
 
-  if (self.id) {
+  if (this.id) {
     // already connected, destroy and connect again
-    self.destroy()
+    this.destroy()
   }
 
-  if (self.destroyed) {
-    self._readableState.reading = false
-    self._readableState.ended = false
-    self._readableState.endEmitted = false
-    self._writableState.ended = false
-    self._writableState.ending = false
-    self._writableState.finished = false
-    self._writableState.errorEmitted = false
-    self._writableState.length = 0
-    self.destroyed = false
+  if (this.destroyed) {
+    this._readableState.reading = false
+    this._readableState.ended = false
+    this._readableState.endEmitted = false
+    this._writableState.ended = false
+    this._writableState.ending = false
+    this._writableState.finished = false
+    this._writableState.errorEmitted = false
+    this._writableState.length = 0
+    this.destroyed = false
   }
 
-  self._connecting = true
-  self.writable = true
+  this._connecting = true
+  this.writable = true
 
-  self._host = options.host || 'localhost'
-  self._port = options.port
+  this._host = options.host || 'localhost'
+  this._port = options.port
 
-  if (typeof self._port !== 'undefined') {
-    if (typeof self._port !== 'number' && typeof self._port !== 'string') {
-      throw new TypeError('"port" option should be a number or string: ' + self._port)
+  if (typeof this._port !== 'undefined') {
+    if (typeof this._port !== 'number' && typeof this._port !== 'string') {
+      throw new TypeError('"port" option should be a number or string: ' + this._port)
     }
-    if (!isLegalPort(self._port)) {
-      throw new RangeError('"port" option should be >= 0 and < 65536: ' + self._port)
+    if (!isLegalPort(this._port)) {
+      throw new RangeError('"port" option should be >= 0 and < 65536: ' + this._port)
     }
   }
-  self._port |= 0
+  this._port |= 0
 
-  self._init()
+  this._init()
 
-  self._unrefTimer()
+  this._unrefTimer()
 
   if (typeof cb === 'function') {
-    self.once('connect', cb)
+    this.once('connect', cb)
   }
 
-  chrome.sockets.tcp.create(function (createInfo) {
-    if (!self._connecting || self.id) {
+  chrome.sockets.tcp.create(createInfo => {
+    if (!this._connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcp.close(createInfo.socketId)
       return
     }
     if (chrome.runtime.lastError) {
-      self.destroy(new Error(chrome.runtime.lastError.message))
+      this.destroy(new Error(chrome.runtime.lastError.message))
       return
     }
 
-    self.id = createInfo.socketId
-    sockets[self.id] = self
+    this.id = createInfo.socketId
+    sockets[this.id] = this
 
-    chrome.sockets.tcp.setPaused(self.id, true)
+    chrome.sockets.tcp.setPaused(this.id, true)
 
-    chrome.sockets.tcp.connect(self.id, self._host, self._port, function (result) {
+    chrome.sockets.tcp.connect(this.id, this._host, this._port, result => {
       // callback may come after call to destroy
-      if (self.id !== createInfo.socketId) {
+      if (this.id !== createInfo.socketId) {
         ignoreLastError()
         return
       }
       if (result !== 0) {
-        self.destroy(exceptionWithHostPort(result, 'connect', self._host, self._port))
+        this.destroy(exceptionWithHostPort(result, 'connect', this._host, this._port))
         return
       }
 
-      self._unrefTimer()
-      self._onConnect()
+      this._unrefTimer()
+      this._onConnect()
     })
   })
 
-  return self
+  return this
 }
 
 Socket.prototype._onConnect = function () {
-  var self = this
-
-  var idBefore = self.id
-  chrome.sockets.tcp.getInfo(self.id, function (result) {
-    if (self.id !== idBefore) {
+  var idBefore = this.id
+  chrome.sockets.tcp.getInfo(this.id, result => {
+    if (this.id !== idBefore) {
       ignoreLastError()
       return
     }
     if (chrome.runtime.lastError) {
-      self.destroy(new Error(chrome.runtime.lastError.message))
+      this.destroy(new Error(chrome.runtime.lastError.message))
       return
     }
 
-    self.remoteAddress = result.peerAddress
-    self.remoteFamily = result.peerAddress &&
+    this.remoteAddress = result.peerAddress
+    this.remoteFamily = result.peerAddress &&
         result.peerAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4'
-    self.remotePort = result.peerPort
-    self.localAddress = result.localAddress
-    self.localPort = result.localPort
+    this.remotePort = result.peerPort
+    this.localAddress = result.localAddress
+    this.localPort = result.localPort
 
-    self._connecting = false
-    self.readable = true
+    this._connecting = false
+    this.readable = true
 
-    self.emit('connect')
+    this.emit('connect')
     // start the first read, or get an immediate EOF.
     // this doesn't actually consume any bytes, because len=0
-    if (!self.isPaused()) self.read(0)
+    if (!this.isPaused()) this.read(0)
   })
 }
 
@@ -744,33 +717,28 @@ Socket.prototype._onConnect = function () {
  */
 Object.defineProperty(Socket.prototype, 'bufferSize', {
   get: function () {
-    var self = this
-    if (self.id) {
+    if (this.id) {
       var bytes = this._writableState.length
-      if (self._pendingData) bytes += self._pendingData.length
+      if (this._pendingData) bytes += this._pendingData.length
       return bytes
     }
   }
 })
 
 Socket.prototype.end = function (data, encoding) {
-  var self = this
-  stream.Duplex.prototype.end.call(self, data, encoding)
-  self.writable = false
+  stream.Duplex.prototype.end.call(this, data, encoding)
+  this.writable = false
 }
 
 Socket.prototype._write = function (chunk, encoding, callback) {
-  var self = this
-  if (!callback) callback = function () {}
+  if (!callback) callback = () => {}
 
-  if (self._connecting) {
-    self._pendingData = chunk
-    self.once('connect', function () {
-      self._write(chunk, encoding, callback)
-    })
+  if (this._connecting) {
+    this._pendingData = chunk
+    this.once('connect', () => this._write(chunk, encoding, callback))
     return
   }
-  self._pendingData = null
+  this._pendingData = null
 
   if (!this.id) {
     callback(new Error('This socket is closed'))
@@ -783,74 +751,71 @@ Socket.prototype._write = function (chunk, encoding, callback) {
     buffer = buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength)
   }
 
-  var idBefore = self.id
-  chrome.sockets.tcp.send(self.id, buffer, function (sendInfo) {
-    if (self.id !== idBefore) {
+  var idBefore = this.id
+  chrome.sockets.tcp.send(this.id, buffer, sendInfo => {
+    if (this.id !== idBefore) {
       ignoreLastError()
       return
     }
 
     if (sendInfo.resultCode < 0) {
-      self.destroy(exceptionWithHostPort(sendInfo.resultCode, 'write', self.remoteAddress, self.remotePort), callback)
+      this.destroy(exceptionWithHostPort(sendInfo.resultCode, 'write', this.remoteAddress, this.remotePort), callback)
     } else {
-      self._unrefTimer()
+      this._unrefTimer()
       callback(null)
     }
   })
 
-  self._bytesDispatched += chunk.length
+  this._bytesDispatched += chunk.length
 }
 
 Socket.prototype._read = function (bufferSize) {
-  var self = this
-  if (self._connecting || !self.id) {
-    self.once('connect', self._read.bind(self, bufferSize))
+  if (this._connecting || !this.id) {
+    this.once('connect', this._read.bind(this, bufferSize))
     return
   }
 
-  chrome.sockets.tcp.setPaused(self.id, false)
+  chrome.sockets.tcp.setPaused(this.id, false)
 
-  var idBefore = self.id
-  chrome.sockets.tcp.getInfo(self.id, function (result) {
-    if (self.id !== idBefore) {
+  var idBefore = this.id
+  chrome.sockets.tcp.getInfo(this.id, result => {
+    if (this.id !== idBefore) {
       ignoreLastError()
       return
     }
     if (chrome.runtime.lastError || !result.connected) {
-      self._onReceiveError(-15) // workaround for https://crbug.com/518161
+      this._onReceiveError(-15) // workaround for https://crbug.com/518161
     }
   })
 }
 
 Socket.prototype._onReceive = function (data) {
-  var self = this
   // assuming buffer is browser implementation (`buffer` package on npm)
   var buffer = Buffer._augment(new Uint8Array(data))
-  var offset = self.bytesRead
+  var offset = this.bytesRead
 
-  self.bytesRead += buffer.length
-  self._unrefTimer()
+  this.bytesRead += buffer.length
+  this._unrefTimer()
 
-  if (self.ondata) {
+  if (this.ondata) {
     console.error('socket.ondata = func is non-standard, use socket.on(\'data\', func)')
-    self.ondata(buffer, offset, self.bytesRead)
+    this.ondata(buffer, offset, this.bytesRead)
   }
-  if (!self.push(buffer)) { // if returns false, then apply backpressure
-    chrome.sockets.tcp.setPaused(self.id, true)
+  if (!this.push(buffer)) { // if returns false, then apply backpressure
+    chrome.sockets.tcp.setPaused(this.id, true)
   }
 }
 
 Socket.prototype._onReceiveError = function (resultCode) {
-  var self = this
   if (resultCode === -100) { // net::ERR_CONNECTION_CLOSED
-    if (self.onend) {
+    if (this.onend) {
       console.error('socket.onend = func is non-standard, use socket.on(\'end\', func)')
-      self.once('end', self.onend)
+      this.once('end', this.onend)
     }
-    self.push(null)
-    self.destroy()
+    this.push(null)
+    this.destroy()
   } else if (resultCode < 0) {
-    self.destroy(errnoException(resultCode, 'read'))
+    this.destroy(errnoException(resultCode, 'read'))
   }
 }
 
@@ -860,67 +825,61 @@ Socket.prototype._onReceiveError = function (resultCode) {
  */
 Object.defineProperty(Socket.prototype, 'bytesWritten', {
   get: function () {
-    var self = this
-    if (self.id) return self._bytesDispatched + self.bufferSize
+    if (this.id) return this._bytesDispatched + this.bufferSize
   }
 })
 
 Socket.prototype.destroy = function (exception) {
-  var self = this
-  self._destroy(exception)
+  this._destroy(exception)
 }
 
 Socket.prototype._destroy = function (exception, cb) {
-  var self = this
-
-  function fireErrorCallbacks () {
+  var fireErrorCallbacks = () => {
     if (cb) cb(exception)
-    if (exception && !self._writableState.errorEmitted) {
-      process.nextTick(emitErrorNT, self, exception)
-      self._writableState.errorEmitted = true
+    if (exception && !this._writableState.errorEmitted) {
+      process.nextTick(emitErrorNT, this, exception)
+      this._writableState.errorEmitted = true
     }
   }
 
-  if (self.destroyed) {
+  if (this.destroyed) {
     // already destroyed, fire error callbacks
     fireErrorCallbacks()
     return
   }
 
-  if (self.server) {
-    self.server._connections -= 1
-    if (self.server._emitCloseIfDrained) self.server._emitCloseIfDrained()
-    self.server = null
+  if (this.server) {
+    this.server._connections -= 1
+    if (this.server._emitCloseIfDrained) this.server._emitCloseIfDrained()
+    this.server = null
   }
 
-  self._reset()
+  this._reset()
 
-  for (var s = self; s !== null; s = s._parent) timers.unenroll(s)
+  for (var s = this; s !== null; s = s._parent) timers.unenroll(s)
 
-  self.destroyed = true
+  this.destroyed = true
 
   // If _destroy() has been called before chrome.sockets.tcp.create()
   // callback, we don't have an id. Therefore we don't need to close
   // or disconnect
-  if (self.id) {
-    delete sockets[self.id]
-    chrome.sockets.tcp.close(self.id, function () {
-      if (self.destroyed) {
-        self.emit('close', !!exception)
+  if (this.id) {
+    delete sockets[this.id]
+    chrome.sockets.tcp.close(this.id, () => {
+      if (this.destroyed) {
+        this.emit('close', !!exception)
       }
     })
-    self.id = null
+    this.id = null
   }
 
   fireErrorCallbacks()
 }
 
 Socket.prototype.destroySoon = function () {
-  var self = this
+  if (this.writable) this.end()
 
-  if (self.writable) self.end()
-
-  if (self._writableState.finished) self.destroy()
+  if (this._writableState.finished) this.destroy()
 }
 
 /**
@@ -937,22 +896,20 @@ Socket.prototype.destroySoon = function () {
  * @param {function} callback
  */
 Socket.prototype.setTimeout = function (timeout, callback) {
-  var self = this
-
   if (timeout === 0) {
-    timers.unenroll(self)
+    timers.unenroll(this)
     if (callback) {
-      self.removeListener('timeout', callback)
+      this.removeListener('timeout', callback)
     }
   } else {
-    timers.enroll(self, timeout)
-    timers._unrefActive(self)
+    timers.enroll(this, timeout)
+    timers._unrefActive(this)
     if (callback) {
-      self.once('timeout', callback)
+      this.once('timeout', callback)
     }
   }
 
-  return self
+  return this
 }
 
 Socket.prototype._onTimeout = function () {
@@ -979,17 +936,16 @@ Socket.prototype._unrefTimer = function unrefTimer () {
  *                            operation is done.
  */
 Socket.prototype.setNoDelay = function (noDelay, callback) {
-  var self = this
-  if (!self.id) {
-    self.once('connect', self.setNoDelay.bind(self, noDelay, callback))
-    return self
+  if (!this.id) {
+    this.once('connect', this.setNoDelay.bind(this, noDelay, callback))
+    return this
   }
 
   // backwards compatibility: assume true when `noDelay` is omitted
   noDelay = noDelay === undefined ? true : !!noDelay
-  chrome.sockets.tcp.setNoDelay(self.id, noDelay, chromeCallbackWrap(callback))
+  chrome.sockets.tcp.setNoDelay(this.id, noDelay, chromeCallbackWrap(callback))
 
-  return self
+  return this
 }
 
 /**
@@ -1011,16 +967,15 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
  *                            operation is done.
  */
 Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
-  var self = this
-  if (!self.id) {
-    self.once('connect', self.setKeepAlive.bind(self, enable, initialDelay, callback))
-    return self
+  if (!this.id) {
+    this.once('connect', this.setKeepAlive.bind(this, enable, initialDelay, callback))
+    return this
   }
 
-  chrome.sockets.tcp.setKeepAlive(self.id, !!enable, ~~(initialDelay / 1000),
+  chrome.sockets.tcp.setKeepAlive(this.id, !!enable, ~~(initialDelay / 1000),
       chromeCallbackWrap(callback))
 
-  return self
+  return this
 }
 
 /**
@@ -1031,21 +986,19 @@ Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
  * @return {Object} information
  */
 Socket.prototype.address = function () {
-  var self = this
   return {
-    address: self.localAddress,
-    port: self.localPort,
-    family: self.localAddress &&
-      self.localAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4'
+    address: this.localAddress,
+    port: this.localPort,
+    family: this.localAddress &&
+      this.localAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4'
   }
 }
 
 Object.defineProperty(Socket.prototype, 'readyState', {
   get: function () {
-    var self = this
-    if (self._connecting) {
+    if (this._connecting) {
       return 'opening'
-    } else if (self.readable && self.writable) {
+    } else if (this.readable && this.writable) {
       return 'open'
     } else {
       return 'closed'
@@ -1124,7 +1077,7 @@ function ignoreLastError () {
 }
 
 function chromeCallbackWrap (callback) {
-  return function () {
+  return () => {
     var error
     if (chrome.runtime.lastError) {
       console.error(chrome.runtime.lastError.message)
