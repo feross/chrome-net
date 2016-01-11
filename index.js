@@ -1073,7 +1073,7 @@ function isLegalPort (port) {
 
  // This prevents "Unchecked runtime.lastError" errors
 function ignoreLastError () {
-  chrome.runtime.lastError // call the getter function
+  void chrome.runtime.lastError // call the getter function
 }
 
 function chromeCallbackWrap (callback) {
