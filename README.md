@@ -68,4 +68,4 @@ To run tests, use `npm test`. The tests will run TCP and UDP servers and launch 
 
 ## license
 
-MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org) & John Hiesey.
+MIT. Copyright (c) [Feross Aboukhadijeh](http://feross.org), John Hiesey & Jan Schär.
