@@ -790,8 +790,7 @@ Socket.prototype._read = function (bufferSize) {
 }
 
 Socket.prototype._onReceive = function (data) {
-  // assuming buffer is browser implementation (`buffer` package on npm)
-  var buffer = Buffer._augment(new Uint8Array(data))
+  var buffer = new Buffer(data)
   var offset = this.bytesRead
 
   this.bytesRead += buffer.length
