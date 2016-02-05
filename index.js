@@ -151,7 +151,7 @@ function Server (options, connectionListener) {
     get: deprecate(() => this._connections,
       'Server.connections property is deprecated. ' +
       'Use Server.getConnections method instead.'),
-    set: deprecate(val => (this._connections = val),
+    set: deprecate((val) => (this._connections = val),
       'Server.connections property is deprecated.'),
     configurable: true, enumerable: false
   })
@@ -265,7 +265,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
   this._connecting = true
 
-  chrome.sockets.tcpServer.create(createInfo => {
+  chrome.sockets.tcpServer.create((createInfo) => {
     if (!this._connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcpServer.close(createInfo.socketId)
@@ -281,7 +281,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
     var listen = () => chrome.sockets.tcpServer.listen(this.id, this._host,
         this._port, this._backlog,
-        result => {
+        (result) => {
           // callback may be after close
           if (this.id !== socketId) {
             ignoreLastError()
@@ -307,7 +307,7 @@ Server.prototype._onListen = function (result) {
 
   if (result === 0) {
     var idBefore = this.id
-    chrome.sockets.tcpServer.getInfo(this.id, info => {
+    chrome.sockets.tcpServer.getInfo(this.id, (info) => {
       if (this.id !== idBefore) {
         ignoreLastError()
         return
@@ -647,7 +647,7 @@ Socket.prototype.connect = function () {
     this.once('connect', cb)
   }
 
-  chrome.sockets.tcp.create(createInfo => {
+  chrome.sockets.tcp.create((createInfo) => {
     if (!this._connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcp.close(createInfo.socketId)
@@ -663,7 +663,7 @@ Socket.prototype.connect = function () {
 
     chrome.sockets.tcp.setPaused(this.id, true)
 
-    chrome.sockets.tcp.connect(this.id, this._host, this._port, result => {
+    chrome.sockets.tcp.connect(this.id, this._host, this._port, (result) => {
       // callback may come after call to destroy
       if (this.id !== createInfo.socketId) {
         ignoreLastError()
@@ -684,7 +684,7 @@ Socket.prototype.connect = function () {
 
 Socket.prototype._onConnect = function () {
   var idBefore = this.id
-  chrome.sockets.tcp.getInfo(this.id, result => {
+  chrome.sockets.tcp.getInfo(this.id, (result) => {
     if (this.id !== idBefore) {
       ignoreLastError()
       return
@@ -752,7 +752,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
   }
 
   var idBefore = this.id
-  chrome.sockets.tcp.send(this.id, buffer, sendInfo => {
+  chrome.sockets.tcp.send(this.id, buffer, (sendInfo) => {
     if (this.id !== idBefore) {
       ignoreLastError()
       return
@@ -778,7 +778,7 @@ Socket.prototype._read = function (bufferSize) {
   chrome.sockets.tcp.setPaused(this.id, false)
 
   var idBefore = this.id
-  chrome.sockets.tcp.getInfo(this.id, result => {
+  chrome.sockets.tcp.getInfo(this.id, (result) => {
     if (this.id !== idBefore) {
       ignoreLastError()
       return
