@@ -18,7 +18,7 @@
     "chrome-dgram": "^2.0.6",
     "envify": "^3.2.0",
     "once": "1.x",
-    "portfinder": "0.x",
+    "portfinder": "^1.0.2",
     "run-auto": "^1.1.3",
     "standard": "^6.0.8",
     "tape": "^4.0.0",
