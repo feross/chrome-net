@@ -21,7 +21,8 @@ var timers = require('timers')
 var servers = {}
 var sockets = {}
 
-if (typeof chrome !== 'undefined') {
+// Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
+if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
   chrome.sockets.tcpServer.onAccept.addListener(onAccept)
   chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
   chrome.sockets.tcp.onReceive.addListener(onReceive)
