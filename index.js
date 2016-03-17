@@ -15,6 +15,7 @@ var inherits = require('inherits')
 var stream = require('stream')
 var deprecate = require('util').deprecate
 var timers = require('timers')
+var Buffer = require('buffer').Buffer
 
 // Track open servers and sockets to route incoming sockets (via onAccept and onReceive)
 // to the right handlers.
