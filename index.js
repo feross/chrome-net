@@ -102,7 +102,10 @@ exports.createServer = function (options, connectionListener) {
  * @return {Socket}
  */
 exports.connect = exports.createConnection = function () {
-  var args = normalizeConnectArgs(arguments)
+  const argsLen = arguments.length
+  var args = new Array(argsLen)
+  for (var i = 0; i < argsLen; i++) args[i] = arguments[i]
+  args = normalizeConnectArgs(args)
   var s = new Socket(args[0])
   return Socket.prototype.connect.apply(s, args)
 }
@@ -404,6 +407,14 @@ function emitCloseNT (self) {
   self.emit('close')
 }
 
+Object.defineProperty(Server.prototype, 'listening', {
+  get: function () {
+    return !!this._address
+  },
+  configurable: true,
+  enumerable: true
+})
+
 /**
  * Returns the bound address, the address family name and port of the socket
  * as reported by the operating system. Returns an object with three
@@ -540,7 +551,7 @@ function Socket (options) {
   this.on('finish', this.destroy)
 
   if (options.server) {
-    this.server = options.server
+    this.server = this._server = options.server
     this.id = options.id
     sockets[this.id] = this
 
@@ -564,6 +575,10 @@ Socket.prototype._init = function () {
   this.bytesRead = 0
 
   this._bytesDispatched = 0
+
+  // Reserve properties
+  this.server = null
+  this._server = null
 }
 
 // called when creating new Socket, or when closing a Socket
@@ -600,7 +615,10 @@ Socket.prototype._reset = function () {
  * @return {Socket}   this socket (for chaining)
  */
 Socket.prototype.connect = function () {
-  var args = normalizeConnectArgs(arguments)
+  const argsLen = arguments.length
+  var args = new Array(argsLen)
+  for (var i = 0; i < argsLen; i++) args[i] = arguments[i]
+  args = normalizeConnectArgs(args)
   var options = args[0]
   var cb = args[1]
 
@@ -749,7 +767,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
 
   // assuming buffer is browser implementation (`buffer` package on npm)
   var buffer = chunk.buffer
-  if (chunk.byteOffset || chunk.byteLength !== buffer.byteLength) {
+  if (chunk.byteLength !== buffer.byteLength) {
     buffer = buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength)
   }
 
@@ -773,7 +791,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
 
 Socket.prototype._read = function (bufferSize) {
   if (this._connecting || !this.id) {
-    this.once('connect', this._read.bind(this, bufferSize))
+    this.once('connect', () => this._read(bufferSize))
     return
   }
 
@@ -849,10 +867,9 @@ Socket.prototype._destroy = function (exception, cb) {
     return
   }
 
-  if (this.server) {
-    this.server._connections -= 1
-    if (this.server._emitCloseIfDrained) this.server._emitCloseIfDrained()
-    this.server = null
+  if (this._server) {
+    this._server._connections -= 1
+    if (this._server._emitCloseIfDrained) this._server._emitCloseIfDrained()
   }
 
   this._reset()
@@ -938,7 +955,7 @@ Socket.prototype._unrefTimer = function unrefTimer () {
  */
 Socket.prototype.setNoDelay = function (noDelay, callback) {
   if (!this.id) {
-    this.once('connect', this.setNoDelay.bind(this, noDelay, callback))
+    this.once('connect', () => this.setNoDelay(noDelay, callback))
     return this
   }
 
@@ -969,7 +986,7 @@ Socket.prototype.setNoDelay = function (noDelay, callback) {
  */
 Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
   if (!this.id) {
-    this.once('connect', this.setKeepAlive.bind(this, enable, initialDelay, callback))
+    this.once('connect', () => this.setKeepAlive(enable, initialDelay, callback))
     return this
   }
 
