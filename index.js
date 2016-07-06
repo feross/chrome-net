@@ -332,9 +332,11 @@ Server.prototype._onListen = function (result) {
     })
   } else {
     this.emit('error', exceptionWithHostPort(result, 'listen', this._host, this._port))
-    chrome.sockets.tcpServer.close(this.id)
-    delete servers[this.id]
-    this.id = null
+    if (this.id) {
+      chrome.sockets.tcpServer.close(this.id)
+      delete servers[this.id]
+      this.id = null
+    }
   }
 }
 
