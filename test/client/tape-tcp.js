@@ -12,7 +12,7 @@ test('TCP listen', function (t) {
   }, /Pipes are not supported/, 'throws when trying to use named pipes')
   t.throws(function () {
     net.createServer().listen(65536)
-  }, /"port" option should be >= 0 and < 65536/, 'throws when using invalid port 65536')
+  }, /"port" argument must be >= 0 and < 65536/, 'throws when using invalid port 65536')
   t.end()
 })
 

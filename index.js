@@ -142,12 +142,14 @@ function Server (options, connectionListener) {
     connectionListener = options
     options = {}
     this.on('connection', connectionListener)
-  } else {
+  } else if (options == null || typeof options === 'object') {
     options = options || {}
 
     if (typeof connectionListener === 'function') {
       this.on('connection', connectionListener)
     }
+  } else {
+    throw new TypeError('options must be an object')
   }
 
   this._connections = 0
@@ -162,7 +164,7 @@ function Server (options, connectionListener) {
   })
 
   this.id = null // a number > 0
-  this._connecting = false
+  this.connecting = false
 
   this.allowHalfOpen = options.allowHalfOpen || false
   this.pauseOnConnect = !!options.pauseOnConnect
@@ -254,9 +256,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
   }
 
   // If port is invalid or undefined, bind to a random port.
-  if (typeof port !== 'undefined' && !isLegalPort(port)) {
-    throw new RangeError('"port" option should be >= 0 and < 65536: ' + port)
-  }
+  assertPort(port)
   this._port = port | 0
 
   this._host = address
@@ -268,10 +268,10 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
   this._backlog = typeof backlog === 'number' ? backlog : undefined
 
-  this._connecting = true
+  this.connecting = true
 
   chrome.sockets.tcpServer.create((createInfo) => {
-    if (!this._connecting || this.id) {
+    if (!this.connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcpServer.close(createInfo.socketId)
       return
@@ -308,7 +308,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
 }
 
 Server.prototype._onListen = function (result) {
-  this._connecting = false
+  this.connecting = false
 
   if (result === 0) {
     var idBefore = this.id
@@ -387,7 +387,7 @@ Server.prototype.close = function (callback) {
     this.id = null
   }
   this._address = null
-  this._connecting = false
+  this.connecting = false
 
   this._emitCloseIfDrained()
 
@@ -395,7 +395,7 @@ Server.prototype.close = function (callback) {
 }
 
 Server.prototype._emitCloseIfDrained = function () {
-  if (this.id || this._connecting || this._connections) {
+  if (this.id || this.connecting || this._connections) {
     return
   }
 
@@ -403,7 +403,7 @@ Server.prototype._emitCloseIfDrained = function () {
 }
 
 function emitCloseNT (self) {
-  if (self.id || self._connecting || self._connections) {
+  if (self.id || self.connecting || self._connections) {
     return
   }
   self.emit('close')
@@ -564,7 +564,7 @@ function Socket (options) {
     }
 
     // For incoming sockets (from server), it's already connected.
-    this._connecting = true
+    this.connecting = true
     this.writable = true
     this._onConnect()
   }
@@ -589,7 +589,7 @@ Socket.prototype._reset = function () {
       this.localAddress = this.localPort = null
   this.remoteFamily = 'IPv4'
   this.readable = this.writable = false
-  this._connecting = false
+  this.connecting = false
 }
 
 /**
@@ -645,7 +645,7 @@ Socket.prototype.connect = function () {
     this.destroyed = false
   }
 
-  this._connecting = true
+  this.connecting = true
   this.writable = true
 
   this._host = options.host || 'localhost'
@@ -670,7 +670,7 @@ Socket.prototype.connect = function () {
   }
 
   chrome.sockets.tcp.create((createInfo) => {
-    if (!this._connecting || this.id) {
+    if (!this.connecting || this.id) {
       ignoreLastError()
       chrome.sockets.tcp.close(createInfo.socketId)
       return
@@ -723,7 +723,7 @@ Socket.prototype._onConnect = function () {
     this.localAddress = result.localAddress
     this.localPort = result.localPort
 
-    this._connecting = false
+    this.connecting = false
     this.readable = true
 
     this.emit('connect')
@@ -755,7 +755,7 @@ Socket.prototype.end = function (data, encoding) {
 Socket.prototype._write = function (chunk, encoding, callback) {
   if (!callback) callback = () => {}
 
-  if (this._connecting) {
+  if (this.connecting) {
     this._pendingData = chunk
     this.once('connect', () => this._write(chunk, encoding, callback))
     return
@@ -792,7 +792,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
 }
 
 Socket.prototype._read = function (bufferSize) {
-  if (this._connecting || !this.id) {
+  if (this.connecting || !this.id) {
     this.once('connect', () => this._read(bufferSize))
     return
   }
@@ -812,7 +812,7 @@ Socket.prototype._read = function (bufferSize) {
 }
 
 Socket.prototype._onReceive = function (data) {
-  var buffer = new Buffer(data)
+  var buffer = Buffer.from(data)
   var offset = this.bytesRead
 
   this.bytesRead += buffer.length
@@ -840,14 +840,20 @@ Socket.prototype._onReceiveError = function (resultCode) {
   }
 }
 
+function protoGetter (name, callback) {
+  Object.defineProperty(Socket.prototype, name, {
+    configurable: false,
+    enumerable: true,
+    get: callback
+  })
+}
+
 /**
  * The amount of bytes sent.
  * @return {number}
  */
-Object.defineProperty(Socket.prototype, 'bytesWritten', {
-  get: function () {
-    if (this.id) return this._bytesDispatched + this.bufferSize
-  }
+protoGetter('bytesWritten', function bytesWritten () {
+  if (this.id) return this._bytesDispatched + this.bufferSize
 })
 
 Socket.prototype.destroy = function (exception) {
@@ -1014,9 +1020,15 @@ Socket.prototype.address = function () {
   }
 }
 
+Object.defineProperty(Socket.prototype, '_connecting', {
+  get: function () {
+    return this.connecting
+  }
+})
+
 Object.defineProperty(Socket.prototype, 'readyState', {
   get: function () {
-    if (this._connecting) {
+    if (this.connecting) {
       return 'opening'
     } else if (this.readable && this.writable) {
       return 'open'
@@ -1087,8 +1099,17 @@ function isPipeName (s) {
 // Check that the port number is not NaN when coerced to a number,
 // is an integer and that it falls within the legal range of port numbers.
 function isLegalPort (port) {
-  if (typeof port === 'string' && port.trim() === '') return false
-  return +port === (port >>> 0) && port >= 0 && port <= 0xFFFF
+  if ((typeof port !== 'number' && typeof port !== 'string') ||
+      (typeof port === 'string' && port.trim().length === 0)) {
+    return false
+  }
+  return +port === (+port >>> 0) && port <= 0xFFFF
+}
+
+function assertPort (port) {
+  if (typeof port !== 'undefined' && !isLegalPort(port)) {
+    throw new RangeError('"port" argument must be >= 0 and < 65536')
+  }
 }
 
  // This prevents "Unchecked runtime.lastError" errors
