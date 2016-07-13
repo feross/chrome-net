@@ -160,7 +160,8 @@ function Server (options, connectionListener) {
       'Use Server.getConnections method instead.'),
     set: deprecate((val) => (this._connections = val),
       'Server.connections property is deprecated.'),
-    configurable: true, enumerable: false
+    configurable: true,
+    enumerable: false
   })
 
   this.id = null // a number > 0
