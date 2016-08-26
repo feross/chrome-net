@@ -20,7 +20,7 @@
     "once": "1.x",
     "portfinder": "^1.0.2",
     "run-auto": "^2.0.0",
-    "standard": "^7.1.2",
+    "standard": "*",
     "tape": "^4.0.0",
     "through": "2.x"
   },
