@@ -134,7 +134,7 @@ function Server (/* [options], listener */) {
   var self = this
   if (!(self instanceof Server)) return new Server(arguments[0], arguments[1])
   EventEmitter.call(self)
-  
+
   if (!listenersAdded) {
     if (typeof chrome !== 'undefined') {
       chrome.sockets.tcpServer.onAccept.addListener(onAccept)
@@ -1146,9 +1146,10 @@ var errorChromeToUv = {
   '-138': 'EACCES',
   '-147': 'EADDRINUSE',
   '-108': 'EADDRNOTAVAIL',
+  '-104': 'ECONNRESET',
   '-103': 'ECONNABORTED',
-  '-102': 'ECONNREFUSED',
-  '-101': 'ECONNRESET',
+  '-102': 'ENETRESET',
+  '-101': 'ENETUNREACH',
   '-16': 'EEXIST',
   '-8': 'EFBIG',
   '-109': 'EHOSTUNREACH',
