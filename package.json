@@ -14,7 +14,7 @@
     "inherits": "^2.0.1"
   },
   "devDependencies": {
-    "browserify": "^13.0.0",
+    "browserify": "^14.0.0",
     "chrome-dgram": "^2.0.6",
     "envify": "^3.2.0",
     "once": "1.x",
