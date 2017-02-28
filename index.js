@@ -815,6 +815,7 @@ Socket.prototype._read = function (bufferSize) {
 Socket.prototype._onReceive = function (data) {
   var buffer = Buffer.from(data)
   var offset = this.bytesRead
+  console.log("onReceive got "+buffer.length+" bytes: "+buffer.slice(0,50).toString('hex')+"...")
 
   this.bytesRead += buffer.length
   this._unrefTimer()
@@ -823,9 +824,7 @@ Socket.prototype._onReceive = function (data) {
     console.error('socket.ondata = func is non-standard, use socket.on(\'data\', func)')
     this.ondata(buffer, offset, this.bytesRead)
   }
-  if (!this.push(buffer)) { // if returns false, then apply backpressure
-    chrome.sockets.tcp.setPaused(this.id, true)
-  }
+  this.push(buffer)
 }
 
 Socket.prototype._onReceiveError = function (resultCode) {
