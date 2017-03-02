@@ -21,7 +21,7 @@ client.on('data', function (data) {
   }
 })
 
-client.write(new Buffer('|beep|').slice(1, 5))
+client.write(Buffer.from('|beep|').slice(1, 5))
 
 // TODO:
 // - test bytesWritten
