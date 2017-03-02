@@ -21,14 +21,7 @@ var Buffer = require('buffer').Buffer
 // to the right handlers.
 var servers = {}
 var sockets = {}
-
-// Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
-if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
-  chrome.sockets.tcpServer.onAccept.addListener(onAccept)
-  chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
-  chrome.sockets.tcp.onReceive.addListener(onReceive)
-  chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
-}
+var listenersAdded = false
 
 function onAccept (info) {
   if (info.socketId in servers) {
@@ -137,6 +130,17 @@ inherits(Server, EventEmitter)
 function Server (options, connectionListener) {
   if (!(this instanceof Server)) return new Server(options, connectionListener)
   EventEmitter.call(this)
+
+  if(!listenersAdded) {
+    // Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
+    if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
 
   if (typeof options === 'function') {
     connectionListener = options
@@ -516,6 +520,17 @@ inherits(Socket, stream.Duplex)
 function Socket (options) {
   if (!(this instanceof Socket)) return new Socket(options)
 
+  if(!listenersAdded) {
+    // Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
+    if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
+
   if (typeof options === 'number') {
     options = { fd: options } // Legacy interface.
   } else if (options === undefined) {
@@ -815,6 +830,7 @@ Socket.prototype._read = function (bufferSize) {
 Socket.prototype._onReceive = function (data) {
   var buffer = Buffer.from(data)
   var offset = this.bytesRead
+  console.log("onReceive got "+buffer.length+" bytes: "+buffer.slice(0,50).toString('hex')+"...")
 
   this.bytesRead += buffer.length
   this._unrefTimer()
@@ -823,9 +839,7 @@ Socket.prototype._onReceive = function (data) {
     console.error('socket.ondata = func is non-standard, use socket.on(\'data\', func)')
     this.ondata(buffer, offset, this.bytesRead)
   }
-  if (!this.push(buffer)) { // if returns false, then apply backpressure
-    chrome.sockets.tcp.setPaused(this.id, true)
-  }
+  this.push(buffer)
 }
 
 Socket.prototype._onReceiveError = function (resultCode) {
@@ -1142,9 +1156,10 @@ var errorChromeToUv = {
   '-138': 'EACCES',
   '-147': 'EADDRINUSE',
   '-108': 'EADDRNOTAVAIL',
+  '-104': 'ECONNRESET',
   '-103': 'ECONNABORTED',
-  '-102': 'ECONNREFUSED',
-  '-101': 'ECONNRESET',
+  '-102': 'ENETRESET',
+  '-101': 'ENETUNREACH',
   '-16': 'EEXIST',
   '-8': 'EFBIG',
   '-109': 'EHOSTUNREACH',
