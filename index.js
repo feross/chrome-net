@@ -21,14 +21,7 @@ var Buffer = require('buffer').Buffer
 // to the right handlers.
 var servers = {}
 var sockets = {}
-
-// Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
-if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
-  chrome.sockets.tcpServer.onAccept.addListener(onAccept)
-  chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
-  chrome.sockets.tcp.onReceive.addListener(onReceive)
-  chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
-}
+var listenersAdded = false
 
 function onAccept (info) {
   if (info.socketId in servers) {
@@ -137,6 +130,17 @@ inherits(Server, EventEmitter)
 function Server (options, connectionListener) {
   if (!(this instanceof Server)) return new Server(options, connectionListener)
   EventEmitter.call(this)
+
+  if(!listenersAdded) {
+    // Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
+    if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
 
   if (typeof options === 'function') {
     connectionListener = options
@@ -515,6 +519,17 @@ inherits(Socket, stream.Duplex)
  */
 function Socket (options) {
   if (!(this instanceof Socket)) return new Socket(options)
+
+  if(!listenersAdded) {
+    // Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
+    if (typeof chrome === 'object' && typeof chrome.runtime === 'object' && typeof chrome.runtime.id === 'string') {
+      chrome.sockets.tcpServer.onAccept.addListener(onAccept)
+      chrome.sockets.tcpServer.onAcceptError.addListener(onAcceptError)
+      chrome.sockets.tcp.onReceive.addListener(onReceive)
+      chrome.sockets.tcp.onReceiveError.addListener(onReceiveError)
+      listenersAdded = true
+    }
+  }
 
   if (typeof options === 'number') {
     options = { fd: options } // Legacy interface.
