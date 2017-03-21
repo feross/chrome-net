@@ -1,4 +1,11 @@
-# chrome-net [![npm](https://img.shields.io/npm/v/chrome-net.svg)](https://npmjs.org/package/chrome-net) [![downloads](https://img.shields.io/npm/dm/chrome-net.svg)](https://npmjs.org/package/chrome-net)
+# chrome-net [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+
+[npm-image]: https://img.shields.io/npm/v/chrome-net.svg
+[npm-url]: https://npmjs.org/package/chrome-net
+[downloads-image]: https://img.shields.io/npm/dm/chrome-net.svg
+[downloads-url]: https://npmjs.org/package/chrome-net
+[standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
+[standard-url]: https://standardjs.com
 
 ### Use the Node `net` API in Chrome Apps
 
