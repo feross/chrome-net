@@ -782,7 +782,7 @@ Socket.prototype._write = function (chunk, encoding, callback) {
     }
 
     if (sendInfo.resultCode < 0) {
-      this.destroy(exceptionWithHostPort(sendInfo.resultCode, 'write', this.remoteAddress, this.remotePort), callback)
+      this._destroy(exceptionWithHostPort(sendInfo.resultCode, 'write', this.remoteAddress, this.remotePort), callback)
     } else {
       this._unrefTimer()
       callback(null)
