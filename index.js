@@ -286,22 +286,22 @@ Server.prototype.listen = function (/* variable arguments... */) {
     servers[this.id] = this
 
     var listen = () => chrome.sockets.tcpServer.listen(this.id, this._host,
-        this._port, this._backlog,
-        (result) => {
-          // callback may be after close
-          if (this.id !== socketId) {
-            ignoreLastError()
-            return
-          }
-          if (result !== 0 && isAny6) {
-            ignoreLastError()
-            this._host = '0.0.0.0' // try IPv4
-            isAny6 = false
-            return listen()
-          }
+      this._port, this._backlog,
+      (result) => {
+        // callback may be after close
+        if (this.id !== socketId) {
+          ignoreLastError()
+          return
+        }
+        if (result !== 0 && isAny6) {
+          ignoreLastError()
+          this._host = '0.0.0.0' // try IPv4
+          isAny6 = false
+          return listen()
+        }
 
-          this._onListen(result)
-        })
+        this._onListen(result)
+      })
     listen()
   })
 
@@ -1000,7 +1000,7 @@ Socket.prototype.setKeepAlive = function (enable, initialDelay, callback) {
   }
 
   chrome.sockets.tcp.setKeepAlive(this.id, !!enable, ~~(initialDelay / 1000),
-      chromeCallbackWrap(callback))
+    chromeCallbackWrap(callback))
 
   return this
 }
@@ -1113,7 +1113,7 @@ function assertPort (port) {
   }
 }
 
- // This prevents "Unchecked runtime.lastError" errors
+// This prevents "Unchecked runtime.lastError" errors
 function ignoreLastError () {
   void chrome.runtime.lastError // call the getter function
 }
