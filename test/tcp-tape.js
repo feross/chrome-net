@@ -22,7 +22,7 @@ test('tape running on Chrome App', function (t) {
     var server = net.createServer()
 
     server.on('listening', function () {
-      var env = {TAPE_PORT: r.tapePort, PORT0: r.port0, PORT1: r.port1}
+      var env = { TAPE_PORT: r.tapePort, PORT0: r.port0, PORT1: r.port1 }
       helper.browserify('tape-helper.js', env, function (err) {
         t.error(err, 'Clean browserify build')
         child = helper.launchBrowser()

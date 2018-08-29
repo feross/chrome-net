@@ -5,10 +5,10 @@ var PORT0 = Number(process.env.PORT0)
 
 test('TCP listen', function (t) {
   t.throws(function () {
-    net.createServer().listen({fd: 0})
+    net.createServer().listen({ fd: 0 })
   }, /fd is not supported/, 'throws when trying to use named pipes')
   t.throws(function () {
-    net.createServer().listen({path: 'pipename'})
+    net.createServer().listen({ path: 'pipename' })
   }, /Pipes are not supported/, 'throws when trying to use named pipes')
   t.throws(function () {
     net.createServer().listen(65536)
@@ -31,7 +31,7 @@ function isPaused (socket) {
 }
 
 test('Pause on connect', function (t) {
-  var server = net.createServer({pauseOnConnect: true})
+  var server = net.createServer({ pauseOnConnect: true })
   var socket
   server.listen(0, '127.0.0.1')
   server.on('connection', function (con) {
