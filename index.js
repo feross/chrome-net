@@ -883,7 +883,7 @@ Socket.prototype._destroy = function (exception, cb) {
 
   this._reset()
 
-  for (var s = this; s !== null; s = s._parent) timers.unenroll(s)
+  for (var s = this; s !== null; s = s._parent) timers.unenroll(s) // eslint-disable-line node/no-deprecated-api
 
   this.destroyed = true
 
@@ -924,12 +924,12 @@ Socket.prototype.destroySoon = function () {
  */
 Socket.prototype.setTimeout = function (timeout, callback) {
   if (timeout === 0) {
-    timers.unenroll(this)
+    timers.unenroll(this) // eslint-disable-line node/no-deprecated-api
     if (callback) {
       this.removeListener('timeout', callback)
     }
   } else {
-    timers.enroll(this, timeout)
+    timers.enroll(this, timeout) // eslint-disable-line node/no-deprecated-api
     timers._unrefActive(this)
     if (callback) {
       this.once('timeout', callback)
