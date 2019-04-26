@@ -31,20 +31,25 @@ test('tape running on Chrome App', function (t) {
 
     server.on('connection', function (c) {
       console.log('\noutput from tape on Chrome ------------------------------')
+      var rest = ''
       c.on('data', function (data) {
-        data = JSON.parse(data) // TODO: this sometimes fails when two JSON objects arrive in the same packet
-        switch (data.op) {
-          case 'log':
-            process.stdout.write(data.log)
-            break
-          case 'end':
-            console.log('end output from tape on Chrome --------------------------\n')
-            t.ok(data.success, 'all tests on Chrome App passed')
-            c.end()
-            server.close()
-            child.kill()
-            t.end()
-            break
+        data = (rest + data).split('\n')
+        rest = data.pop()
+        for (var i = 0; i < data.length; i++) {
+          var msg = JSON.parse(data[i])
+          switch (msg.op) {
+            case 'log':
+              process.stdout.write(msg.log)
+              break
+            case 'end':
+              console.log('end output from tape on Chrome --------------------------\n')
+              t.ok(msg.success, 'all tests on Chrome App passed')
+              c.end()
+              server.close()
+              child.kill()
+              t.end()
+              break
+          }
         }
       })
     })

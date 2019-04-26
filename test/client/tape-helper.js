@@ -7,10 +7,10 @@ var con = net.connect(TAPE_PORT, '127.0.0.1')
 
 var success = false
 test.createStream().on('data', function (log) {
-  con.write(JSON.stringify({ op: 'log', log: log.toString() }))
+  con.write(JSON.stringify({ op: 'log', log: log.toString() }) + '\n')
   success = log === '\n# ok\n'
 }).on('end', function () {
-  con.write(JSON.stringify({ op: 'end', success: success }))
+  con.write(JSON.stringify({ op: 'end', success: success }) + '\n')
   con.end()
 })
 
