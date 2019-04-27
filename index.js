@@ -29,7 +29,6 @@ if (
   typeof chrome.runtime.id === 'string' &&
   typeof chrome.sockets === 'object' &&
   typeof chrome.sockets.tcpServer === 'object' &&
-  typeof chrome.sockets === 'object' &&
   typeof chrome.sockets.tcp === 'object'
 ) {
   chrome.sockets.tcpServer.onAccept.addListener(onAccept)
