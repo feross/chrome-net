@@ -14,9 +14,9 @@
     "inherits": "^2.0.1"
   },
   "devDependencies": {
-    "browserify": "^14.0.0",
-    "chrome-dgram": "^2.0.6",
-    "envify": "^3.2.0",
+    "browserify": "^16.2.3",
+    "chrome-dgram": "^3.0.1",
+    "envify": "^4.1.0",
     "once": "1.x",
     "portfinder": "^1.0.2",
     "run-auto": "^2.0.0",
