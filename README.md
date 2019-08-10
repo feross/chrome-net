@@ -1,5 +1,7 @@
-# chrome-net [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# chrome-net [![travis][travis-image]][travis-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
 
+[travis-image]: https://img.shields.io/travis/feross/chrome-dns/master.svg
+[travis-url]: https://travis-ci.org/feross/chrome-dns
 [npm-image]: https://img.shields.io/npm/v/chrome-net.svg
 [npm-url]: https://npmjs.org/package/chrome-net
 [downloads-image]: https://img.shields.io/npm/dm/chrome-net.svg
