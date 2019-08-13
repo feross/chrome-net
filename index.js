@@ -1120,9 +1120,9 @@ function assertPort (port) {
   }
 }
 
-// This prevents "Unchecked runtime.lastError" errors
+// Call the getter function to prevent "Unchecked runtime.lastError" errors
 function ignoreLastError () {
-  void chrome.runtime.lastError // call the getter function
+  void chrome.runtime.lastError // eslint-disable-line no-void
 }
 
 function chromeCallbackWrap (callback) {
