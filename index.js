@@ -1167,9 +1167,9 @@ var errorChromeToUv = {
   '-118': 'ETIMEDOUT',
   '-100': 'EOF'
 }
-function errnoException (err, syscall) {
+function errnoException (err, syscall, details) {
   var uvCode = errorChromeToUv[err] || 'UNKNOWN'
-  var message = syscall + ' ' + err
+  var message = syscall + ' ' + err + ' ' + details
   if (chrome.runtime.lastError) {
     message += ' ' + chrome.runtime.lastError.message
   }
