@@ -21,7 +21,7 @@
     "portfinder": "^1.0.2",
     "run-auto": "^2.0.0",
     "standard": "*",
-    "tape": "^4.0.0",
+    "tape": "^5.0.0",
     "through": "2.x"
   },
   "files": [
