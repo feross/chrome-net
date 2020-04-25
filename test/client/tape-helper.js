@@ -10,7 +10,7 @@ test.createStream().on('data', function (log) {
   con.write(JSON.stringify({ op: 'log', log: log.toString() }) + '\n')
   success = log === '\n# ok\n'
 }).on('end', function () {
-  con.write(JSON.stringify({ op: 'end', success: success }) + '\n')
+  con.write(JSON.stringify({ op: 'end', success }) + '\n')
   con.end()
 })
 
