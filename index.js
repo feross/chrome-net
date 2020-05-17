@@ -1,3 +1,4 @@
+/*! chrome-net. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 /* global chrome */
 'use strict'
 
