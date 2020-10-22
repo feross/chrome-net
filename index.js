@@ -333,8 +333,9 @@ Server.prototype._onListen = function (result) {
 
       this._address = {
         port: info.localPort,
-        family: info.localAddress &&
-          info.localAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4',
+        family: info.localAddress && info.localAddress.indexOf(':') !== -1
+          ? 'IPv6'
+          : 'IPv4',
         address: info.localAddress
       }
       this.emit('listening')
@@ -726,8 +727,9 @@ Socket.prototype._onConnect = function () {
     }
 
     this.remoteAddress = result.peerAddress
-    this.remoteFamily = result.peerAddress &&
-        result.peerAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4'
+    this.remoteFamily = result.peerAddress && result.peerAddress.indexOf(':') !== -1
+      ? 'IPv6'
+      : 'IPv4'
     this.remotePort = result.peerPort
     this.localAddress = result.localAddress
     this.localPort = result.localPort
@@ -1024,8 +1026,9 @@ Socket.prototype.address = function () {
   return {
     address: this.localAddress,
     port: this.localPort,
-    family: this.localAddress &&
-      this.localAddress.indexOf(':') !== -1 ? 'IPv6' : 'IPv4'
+    family: this.localAddress && this.localAddress.indexOf(':') !== -1
+      ? 'IPv6'
+      : 'IPv4'
   }
 }
 
