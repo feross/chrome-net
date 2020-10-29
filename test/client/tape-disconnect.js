@@ -1,12 +1,12 @@
-var test = require('tape')
-var net = require('net')
+const test = require('tape')
+const net = require('net')
 
-var PORT0 = Number(process.env.PORT0)
+const PORT0 = Number(process.env.PORT0)
 
 test('disconnect client socket with wait', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       setTimeout(function () {
         socket.destroy()
@@ -23,9 +23,9 @@ test('disconnect client socket with wait', function (t) {
 })
 
 test('disconnect server socket with wait', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       socket.resume() // allow FIN to be received
     })
@@ -42,9 +42,9 @@ test('disconnect server socket with wait', function (t) {
 })
 
 test('disconnect client socket', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       socket.destroy()
     })
@@ -60,9 +60,9 @@ test('disconnect client socket', function (t) {
 })
 
 test('disconnect server socket', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       socket.resume() // allow FIN to be received
     })

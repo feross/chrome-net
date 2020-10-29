@@ -11,17 +11,17 @@
  * You can include this module with require('chrome-net')
  */
 
-var EventEmitter = require('events')
-var inherits = require('inherits')
-var stream = require('stream')
-var deprecate = require('util').deprecate
-var timers = require('timers')
-var Buffer = require('buffer').Buffer
+const EventEmitter = require('events')
+const inherits = require('inherits')
+const stream = require('stream')
+const deprecate = require('util').deprecate
+const timers = require('timers')
+const Buffer = require('buffer').Buffer
 
 // Track open servers and sockets to route incoming sockets (via onAccept and onReceive)
 // to the right handlers.
-var servers = {}
-var sockets = {}
+const servers = {}
+const sockets = {}
 
 // Thorough check for Chrome App since both Edge and Chrome implement dummy chrome object
 if (
@@ -111,10 +111,10 @@ exports.createServer = function (options, connectionListener) {
  */
 exports.connect = exports.createConnection = function () {
   const argsLen = arguments.length
-  var args = new Array(argsLen)
-  for (var i = 0; i < argsLen; i++) args[i] = arguments[i]
+  let args = new Array(argsLen)
+  for (let i = 0; i < argsLen; i++) args[i] = arguments[i]
   args = normalizeConnectArgs(args)
-  var s = new Socket(args[0])
+  const s = new Socket(args[0])
   return Socket.prototype.connect.apply(s, args)
 }
 
@@ -206,21 +206,21 @@ Server.prototype._usingSlaves = false // not used
  * @return {Socket}
  */
 Server.prototype.listen = function (/* variable arguments... */) {
-  var lastArg = arguments[arguments.length - 1]
+  const lastArg = arguments[arguments.length - 1]
   if (typeof lastArg === 'function') {
     this.once('listening', lastArg)
   }
 
-  var port = toNumber(arguments[0])
+  let port = toNumber(arguments[0])
 
-  var address
+  let address
 
   // The third optional argument is the backlog size.
   // When the ip is omitted it can be the second argument.
-  var backlog = toNumber(arguments[1]) || toNumber(arguments[2]) || undefined
+  let backlog = toNumber(arguments[1]) || toNumber(arguments[2]) || undefined
 
   if (arguments[0] !== null && typeof arguments[0] === 'object') {
-    var h = arguments[0]
+    const h = arguments[0]
 
     if (h._handle || h.handle) {
       throw new Error('handle is not supported in Chrome Apps.')
@@ -270,7 +270,7 @@ Server.prototype.listen = function (/* variable arguments... */) {
 
   this._host = address
 
-  var isAny6 = !this._host
+  let isAny6 = !this._host
   if (isAny6) {
     this._host = '::'
   }
@@ -290,10 +290,10 @@ Server.prototype.listen = function (/* variable arguments... */) {
       return
     }
 
-    var socketId = this.id = createInfo.socketId
+    const socketId = this.id = createInfo.socketId
     servers[this.id] = this
 
-    var listen = () => chrome.sockets.tcpServer.listen(this.id, this._host,
+    const listen = () => chrome.sockets.tcpServer.listen(this.id, this._host,
       this._port, this._backlog,
       (result) => {
         // callback may be after close
@@ -320,7 +320,7 @@ Server.prototype._onListen = function (result) {
   this.connecting = false
 
   if (result === 0) {
-    var idBefore = this.id
+    const idBefore = this.id
     chrome.sockets.tcpServer.getInfo(this.id, (info) => {
       if (this.id !== idBefore) {
         ignoreLastError()
@@ -361,7 +361,7 @@ Server.prototype._onAccept = function (clientSocketId) {
 
   this._connections += 1
 
-  var acceptedSocket = new Socket({
+  const acceptedSocket = new Socket({
     server: this,
     id: clientSocketId,
     allowHalfOpen: this.allowHalfOpen,
@@ -628,11 +628,11 @@ Socket.prototype._reset = function () {
  */
 Socket.prototype.connect = function () {
   const argsLen = arguments.length
-  var args = new Array(argsLen)
-  for (var i = 0; i < argsLen; i++) args[i] = arguments[i]
+  let args = new Array(argsLen)
+  for (let i = 0; i < argsLen; i++) args[i] = arguments[i]
   args = normalizeConnectArgs(args)
-  var options = args[0]
-  var cb = args[1]
+  const options = args[0]
+  const cb = args[1]
 
   if (options.path) {
     throw new Error('Pipes are not supported in Chrome Apps.')
@@ -715,7 +715,7 @@ Socket.prototype.connect = function () {
 }
 
 Socket.prototype._onConnect = function () {
-  var idBefore = this.id
+  const idBefore = this.id
   chrome.sockets.tcp.getInfo(this.id, (result) => {
     if (this.id !== idBefore) {
       ignoreLastError()
@@ -751,7 +751,7 @@ Socket.prototype._onConnect = function () {
 Object.defineProperty(Socket.prototype, 'bufferSize', {
   get: function () {
     if (this.id) {
-      var bytes = this._writableState.length
+      let bytes = this._writableState.length
       if (this._pendingData) bytes += this._pendingData.length
       return bytes
     }
@@ -779,12 +779,12 @@ Socket.prototype._write = function (chunk, encoding, callback) {
   }
 
   // assuming buffer is browser implementation (`buffer` package on npm)
-  var buffer = chunk.buffer
+  let buffer = chunk.buffer
   if (chunk.byteLength !== buffer.byteLength) {
     buffer = buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength)
   }
 
-  var idBefore = this.id
+  const idBefore = this.id
   chrome.sockets.tcp.send(this.id, buffer, (sendInfo) => {
     if (this.id !== idBefore) {
       ignoreLastError()
@@ -810,7 +810,7 @@ Socket.prototype._read = function (bufferSize) {
 
   chrome.sockets.tcp.setPaused(this.id, false)
 
-  var idBefore = this.id
+  const idBefore = this.id
   chrome.sockets.tcp.getInfo(this.id, (result) => {
     if (this.id !== idBefore) {
       ignoreLastError()
@@ -823,8 +823,8 @@ Socket.prototype._read = function (bufferSize) {
 }
 
 Socket.prototype._onReceive = function (data) {
-  var buffer = Buffer.from(data)
-  var offset = this.bytesRead
+  const buffer = Buffer.from(data)
+  const offset = this.bytesRead
 
   this.bytesRead += buffer.length
   this._unrefTimer()
@@ -872,7 +872,7 @@ Socket.prototype.destroy = function (exception) {
 }
 
 Socket.prototype._destroy = function (exception, cb) {
-  var fireErrorCallbacks = () => {
+  const fireErrorCallbacks = () => {
     if (cb) cb(exception)
     if (exception && !this._writableState.errorEmitted) {
       process.nextTick(emitErrorNT, this, exception)
@@ -893,7 +893,7 @@ Socket.prototype._destroy = function (exception, cb) {
 
   this._reset()
 
-  for (var s = this; s !== null; s = s._parent) timers.unenroll(s) // eslint-disable-line node/no-deprecated-api
+  for (let s = this; s !== null; s = s._parent) timers.unenroll(s) // eslint-disable-line node/no-deprecated-api
 
   this.destroyed = true
 
@@ -954,7 +954,7 @@ Socket.prototype._onTimeout = function () {
 }
 
 Socket.prototype._unrefTimer = function unrefTimer () {
-  for (var s = this; s !== null; s = s._parent) {
+  for (let s = this; s !== null; s = s._parent) {
     timers._unrefActive(s)
   }
 }
@@ -1061,8 +1061,8 @@ Socket.prototype.ref = function () {
 //
 
 // Source: https://developers.google.com/web/fundamentals/input/form/provide-real-time-validation#use-these-attributes-to-validate-input
-var IPv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
-var IPv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/
+const IPv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+const IPv6Regex = /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/
 
 exports.isIPv4 = IPv4Regex.test.bind(IPv4Regex)
 exports.isIPv6 = IPv6Regex.test.bind(IPv6Regex)
@@ -1080,7 +1080,7 @@ exports.isIP = function (ip) {
  * It is the same as the argument of Socket.prototype.connect().
  */
 function normalizeConnectArgs (args) {
-  var options = {}
+  let options = {}
 
   if (args[0] !== null && typeof args[0] === 'object') {
     // connect(options, [cb])
@@ -1096,7 +1096,7 @@ function normalizeConnectArgs (args) {
     }
   }
 
-  var cb = args[args.length - 1]
+  const cb = args[args.length - 1]
   return typeof cb === 'function' ? [options, cb] : [options]
 }
 
@@ -1131,7 +1131,7 @@ function ignoreLastError () {
 
 function chromeCallbackWrap (callback) {
   return () => {
-    var error
+    let error
     if (chrome.runtime.lastError) {
       console.error(chrome.runtime.lastError.message)
       error = new Error(chrome.runtime.lastError.message)
@@ -1147,7 +1147,7 @@ function emitErrorNT (self, err) {
 // Full list of possible error codes: https://code.google.com/p/chrome-browser/source/browse/trunk/src/net/base/net_error_list.h
 // TODO: Try to reproduce errors in both node & Chrome Apps and extend this list
 //       (what conditions lead to EPIPE?)
-var errorChromeToUv = {
+const errorChromeToUv = {
   '-10': 'EACCES',
   '-22': 'EACCES',
   '-138': 'EACCES',
@@ -1172,13 +1172,13 @@ var errorChromeToUv = {
   '-100': 'EOF'
 }
 function errnoException (err, syscall, details) {
-  var uvCode = errorChromeToUv[err] || 'UNKNOWN'
-  var message = syscall + ' ' + err + ' ' + details
+  const uvCode = errorChromeToUv[err] || 'UNKNOWN'
+  let message = syscall + ' ' + err + ' ' + details
   if (chrome.runtime.lastError) {
     message += ' ' + chrome.runtime.lastError.message
   }
   message += ' (mapped uv code: ' + uvCode + ')'
-  var e = new Error(message)
+  const e = new Error(message)
   e.code = e.errno = uvCode
   // TODO: expose chrome error code; what property name?
   e.syscall = syscall
@@ -1186,7 +1186,7 @@ function errnoException (err, syscall, details) {
 }
 
 function exceptionWithHostPort (err, syscall, address, port, additional) {
-  var details
+  let details
   if (port && port > 0) {
     details = address + ':' + port
   } else {
@@ -1196,7 +1196,7 @@ function exceptionWithHostPort (err, syscall, address, port, additional) {
   if (additional) {
     details += ' - Local (' + additional + ')'
   }
-  var ex = errnoException(err, syscall, details)
+  const ex = errnoException(err, syscall, details)
   ex.address = address
   if (port) {
     ex.port = port

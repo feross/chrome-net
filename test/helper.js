@@ -1,12 +1,12 @@
-var browserify = require('browserify')
-var builtins = require('browserify/lib/builtins.js')
-var cp = require('child_process')
-var envify = require('envify/custom')
-var fs = require('fs')
-var once = require('once')
-var path = require('path')
+const browserify = require('browserify')
+const builtins = require('browserify/lib/builtins.js')
+const cp = require('child_process')
+const envify = require('envify/custom')
+const fs = require('fs')
+const once = require('once')
+const path = require('path')
 
-var CHROME
+let CHROME
 if (process.env.CHROME) {
   CHROME = process.env.CHROME
 } else if (process.platform === 'win32') {
@@ -15,7 +15,7 @@ if (process.env.CHROME) {
   CHROME = '/Applications/Google\\ Chrome\\ Canary.app/Contents/MacOS/Google\\ Chrome\\ Canary'
 }
 
-var BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
+const BUNDLE_PATH = path.join(__dirname, 'chrome-app/bundle.js')
 
 builtins.net = require.resolve('../')
 builtins.dgram = require.resolve('chrome-dgram')
@@ -26,7 +26,7 @@ exports.browserify = function (filename, env, cb) {
   if (!cb) cb = function () {}
   cb = once(cb)
 
-  var b = browserify()
+  const b = browserify()
   b.add(path.join(__dirname, 'client', filename))
   b.transform(envify(env))
 
@@ -38,9 +38,9 @@ exports.browserify = function (filename, env, cb) {
 
 exports.launchBrowser = function () {
   // chrome 40.0.2188.2 won't open extensions without absolute path.
-  var app = path.join(__dirname, '..', 'test/chrome-app')
-  var command = CHROME + ' --load-and-launch-app=' + app
-  var env = { cwd: path.join(__dirname, '..') }
+  const app = path.join(__dirname, '..', 'test/chrome-app')
+  const command = CHROME + ' --load-and-launch-app=' + app
+  const env = { cwd: path.join(__dirname, '..') }
 
   return cp.exec(command, env, function () {})
 }

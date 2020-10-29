@@ -1,8 +1,8 @@
-var auto = require('run-auto')
-var helper = require('./helper')
-var net = require('net')
-var portfinder = require('portfinder')
-var test = require('tape')
+const auto = require('run-auto')
+const helper = require('./helper')
+const net = require('net')
+const portfinder = require('portfinder')
+const test = require('tape')
 
 test('tape running on Chrome App', function (t) {
   auto({
@@ -17,12 +17,12 @@ test('tape running on Chrome App', function (t) {
     }
   }, function (err, r) {
     t.error(err, 'Found free ports')
-    var child
+    let child
 
-    var server = net.createServer()
+    const server = net.createServer()
 
     server.on('listening', function () {
-      var env = { TAPE_PORT: r.tapePort, PORT0: r.port0, PORT1: r.port1 }
+      const env = { TAPE_PORT: r.tapePort, PORT0: r.port0, PORT1: r.port1 }
       helper.browserify('tape-helper.js', env, function (err) {
         t.error(err, 'Clean browserify build')
         child = helper.launchBrowser()
@@ -31,12 +31,12 @@ test('tape running on Chrome App', function (t) {
 
     server.on('connection', function (c) {
       console.log('\noutput from tape on Chrome ------------------------------')
-      var rest = ''
+      let rest = ''
       c.on('data', function (data) {
         data = (rest + data).split('\n')
         rest = data.pop()
-        for (var i = 0; i < data.length; i++) {
-          var msg = JSON.parse(data[i])
+        for (let i = 0; i < data.length; i++) {
+          const msg = JSON.parse(data[i])
           switch (msg.op) {
             case 'log':
               process.stdout.write(msg.log)

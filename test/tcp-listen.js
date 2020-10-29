@@ -1,9 +1,9 @@
-var auto = require('run-auto')
-var dgram = require('dgram')
-var helper = require('./helper')
-var net = require('net')
-var portfinder = require('portfinder')
-var test = require('tape')
+const auto = require('run-auto')
+const dgram = require('dgram')
+const helper = require('./helper')
+const net = require('net')
+const portfinder = require('portfinder')
+const test = require('tape')
 
 test('TCP listen works (echo test)', function (t) {
   auto({
@@ -15,13 +15,13 @@ test('TCP listen works (echo test)', function (t) {
     }
   }, function (err, r) {
     t.error(err, 'Found free ports')
-    var child
+    let child
 
     // Socket for client to notify node when its TCP server is listening
-    var readySocket = dgram.createSocket('udp4')
+    const readySocket = dgram.createSocket('udp4')
     readySocket.on('listening', function () {
       // Start app
-      var env = { LISTEN_PORT: r.listenPort, READY_PORT: r.readyPort }
+      const env = { LISTEN_PORT: r.listenPort, READY_PORT: r.readyPort }
       helper.browserify('tcp-listen.js', env, function (err) {
         t.error(err, 'Clean browserify build')
         child = helper.launchBrowser()
@@ -33,12 +33,12 @@ test('TCP listen works (echo test)', function (t) {
         t.pass('Client listens')
 
         // Do TCP echo test
-        var socket = net.createConnection({ port: r.listenPort })
+        const socket = net.createConnection({ port: r.listenPort })
         socket.on('connect', function () {
           socket.write('beep', 'utf8')
         })
 
-        var i = 0
+        let i = 0
         socket.on('data', function (data) {
           if (i === 0) {
             t.equal(data.toString(), 'boop', 'Beep/boop looks good')

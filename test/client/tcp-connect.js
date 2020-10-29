@@ -1,8 +1,8 @@
-var net = require('net')
+const net = require('net')
 
-var PORT = Number(process.env.PORT)
+const PORT = Number(process.env.PORT)
 
-var client = net.createConnection({
+const client = net.createConnection({
   port: PORT,
   host: '127.0.0.1'
 })

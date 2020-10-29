@@ -1,17 +1,17 @@
-var dgram = require('dgram')
-var net = require('net')
+const dgram = require('dgram')
+const net = require('net')
 
-var LISTEN_PORT = Number(process.env.LISTEN_PORT)
-var READY_PORT = Number(process.env.READY_PORT)
+const LISTEN_PORT = Number(process.env.LISTEN_PORT)
+const READY_PORT = Number(process.env.READY_PORT)
 
-var server = net.createServer()
+const server = net.createServer()
 
 // If any errors are emitted, log them
 server.on('error', function (err) {
   console.error(err.stack)
 })
 
-var readySock
+let readySock
 server.on('listening', function () {
   // Report to node that the TCP server is listening
   readySock = dgram.createSocket('udp4')

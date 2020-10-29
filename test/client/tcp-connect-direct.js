@@ -1,8 +1,8 @@
-var net = require('net')
+const net = require('net')
 
-var PORT = Number(process.env.PORT)
+const PORT = Number(process.env.PORT)
 
-var client = new net.Socket()
+const client = new net.Socket()
 
 // If any errors are emitted, log them
 client.on('error', function (err) {

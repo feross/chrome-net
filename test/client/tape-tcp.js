@@ -1,7 +1,7 @@
-var test = require('tape')
-var net = require('net')
+const test = require('tape')
+const net = require('net')
 
-var PORT0 = Number(process.env.PORT0)
+const PORT0 = Number(process.env.PORT0)
 
 test('TCP listen', function (t) {
   t.throws(function () {
@@ -31,8 +31,8 @@ function isPaused (socket) {
 }
 
 test('Pause on connect', function (t) {
-  var server = net.createServer({ pauseOnConnect: true })
-  var socket
+  const server = net.createServer({ pauseOnConnect: true })
+  let socket
   server.listen(0, '127.0.0.1')
   server.on('connection', function (con) {
     con.on('data', function () {})
@@ -48,8 +48,8 @@ test('Pause on connect', function (t) {
 })
 
 test('Pause on connect = false', function (t) {
-  var server = net.createServer()
-  var socket
+  const server = net.createServer()
+  let socket
   server.listen(0, '127.0.0.1')
   server.on('connection', function (con) {
     con.on('data', function () {})
@@ -67,10 +67,10 @@ test('Pause on connect = false', function (t) {
 })
 
 test('server only emits close when 0 connections', function (t) {
-  var socketClosed = false
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  let socketClosed = false
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.on('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       server.close()
       setTimeout(function () {
@@ -89,7 +89,7 @@ test('server only emits close when 0 connections', function (t) {
 })
 
 test('IPv4/v6 for listen', function (t) {
-  var server = net.createServer().listen(0, '127.0.0.1')
+  const server = net.createServer().listen(0, '127.0.0.1')
   server.once('listening', function () {
     t.equal(server.address().family, 'IPv4')
     server.listen(0, '::1')
@@ -107,9 +107,9 @@ test('IPv4/v6 for listen', function (t) {
 })
 
 test('IPv4/v6 for connect', function (t) {
-  var server = net.createServer().listen(PORT0, '::0')
+  const server = net.createServer().listen(PORT0, '::0')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
     socket.once('connect', function () {
       t.equal(socket.remoteFamily, 'IPv4')
       socket.connect(PORT0, '::1')
@@ -130,10 +130,10 @@ test('IPv4/v6 for connect', function (t) {
 })
 
 test('socket setTimeout', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
-    var timeoutExpected = false
+    const socket = net.connect(PORT0, '127.0.0.1')
+    let timeoutExpected = false
     socket.setTimeout(100, function () {
       t.ok(timeoutExpected, 'Timeout is expected')
       socket.destroy()
@@ -161,9 +161,9 @@ test('socket setTimeout', function (t) {
 })
 
 test('accepted socket', function (t) {
-  var server = net.createServer().listen(PORT0, '127.0.0.1')
+  const server = net.createServer().listen(PORT0, '127.0.0.1')
   server.once('listening', function () {
-    var socket = net.connect(PORT0, '127.0.0.1')
+    const socket = net.connect(PORT0, '127.0.0.1')
 
     server.on('connection', function (con) {
       t.ok(con.writable, 'socket.writable is true')

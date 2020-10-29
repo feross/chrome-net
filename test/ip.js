@@ -1,5 +1,5 @@
-var chromeNet = require('../')
-var test = require('tape')
+const chromeNet = require('../')
+const test = require('tape')
 
 test('net.isIP', function (t) {
   t.ok(chromeNet.isIP('1.2.3.4') === 4)

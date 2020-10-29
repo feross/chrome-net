@@ -1,24 +1,24 @@
-var helper = require('./helper')
-var net = require('net')
-var portfinder = require('portfinder')
-var test = require('tape')
+const helper = require('./helper')
+const net = require('net')
+const portfinder = require('portfinder')
+const test = require('tape')
 
 test('TCP send buffer works', function (t) {
   portfinder.getPort(function (err, port) {
     t.error(err, 'Found free port')
-    var child
+    let child
 
-    var server = net.createServer()
+    const server = net.createServer()
 
     server.on('listening', function () {
-      var env = { PORT: port }
+      const env = { PORT: port }
       helper.browserify('tcp-send-buffer.js', env, function (err) {
         t.error(err, 'Clean browserify build')
         child = helper.launchBrowser()
       })
     })
 
-    var i = 0
+    let i = 0
     server.on('connection', function (c) {
       c.on('data', function (data) {
         if (i === 0) {
